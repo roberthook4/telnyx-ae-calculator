@@ -422,6 +422,44 @@
         </div>
 
         <div class="card">
+            <h2>📅 Month-by-Month Ramp (Year 1)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                Realistic progression from first deal to fully ramped ($60k/month revenue).
+            </p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Revenue</th>
+                            <th>% of Quota</th>
+                            <th>Gross Profit</th>
+                            <th>Seasoning</th>
+                            <th>Commission</th>
+                            <th>Cumulative</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rampTable">
+                    </tbody>
+                    <tfoot style="background: var(--telnyx-green-light); font-weight: 600;">
+                        <tr>
+                            <td>Year 1 Total</td>
+                            <td id="rampTotalRev">$356,000</td>
+                            <td>—</td>
+                            <td id="rampTotalGP">$238,520</td>
+                            <td>—</td>
+                            <td id="rampTotalComm">$117,181</td>
+                            <td>—</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="note">
+                <strong>Seasoning multipliers</strong> significantly boost Year 1 earnings. The 3x multiplier in months 1-2 means early deals are especially valuable.
+            </div>
+        </div>
+
+        <div class="card">
             <h2>💰 Compensation by Performance Level</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;" id="tableDescription">
                 Based on Voice/AI/IOT products, contracted deals, 67% gross margin.
@@ -670,6 +708,64 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
+        // Month-by-month ramp data from spreadsheet
+        const RAMP_REVENUE = [5000, 8000, 12000, 16000, 20000, 25000, 30000, 36000, 42000, 48000, 54000, 60000];
+        
+        function updateRampTable() {
+            const rates = getSelectedRates();
+            const effectiveRate = rates.y1 + CONTRACT_BONUS;
+            
+            let tableHTML = '';
+            let cumulative = 0;
+            let totalRev = 0;
+            let totalGP = 0;
+            let totalComm = 0;
+            
+            RAMP_REVENUE.forEach((revenue, index) => {
+                const month = index + 1;
+                const pctQuota = (revenue / MONTHLY_REVENUE_QUOTA * 100).toFixed(0);
+                const gp = revenue * GROSS_MARGIN;
+                
+                // Get seasoning multiplier
+                const multiplier = SEASONING[month] || 1.0;
+                const multiplierLabel = multiplier > 1 ? multiplier + 'x' : '—';
+                
+                // Calculate commission with seasoning
+                let baseComm = gp * effectiveRate;
+                let commission = baseComm;
+                if (multiplier > 1) {
+                    let seasonedComm = baseComm * multiplier;
+                    let uplift = seasonedComm - baseComm;
+                    let cappedUplift = Math.min(uplift, SEASONING_CAP);
+                    commission = baseComm + cappedUplift;
+                }
+                
+                cumulative += commission;
+                totalRev += revenue;
+                totalGP += gp;
+                totalComm += commission;
+                
+                const highlightClass = multiplier > 1 ? 'style="background: rgba(0, 195, 137, 0.08);"' : '';
+                
+                tableHTML += `
+                    <tr ${highlightClass}>
+                        <td>M${month}</td>
+                        <td>${formatCurrency(revenue)}</td>
+                        <td>${pctQuota}%</td>
+                        <td>${formatCurrency(gp)}</td>
+                        <td style="color: ${multiplier > 1 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${multiplier > 1 ? '600' : 'normal'};">${multiplierLabel}</td>
+                        <td>${formatCurrency(commission)}</td>
+                        <td>${formatCurrency(cumulative)}</td>
+                    </tr>
+                `;
+            });
+            
+            document.getElementById('rampTable').innerHTML = tableHTML;
+            document.getElementById('rampTotalRev').textContent = formatCurrency(totalRev);
+            document.getElementById('rampTotalGP').textContent = formatCurrency(totalGP);
+            document.getElementById('rampTotalComm').textContent = formatCurrency(totalComm);
+        }
+        
         // Deal Calculator
         function updateDealCalculator() {
             const mrr = parseFloat(document.getElementById('dealMRR').value) || 0;
@@ -713,11 +809,15 @@
         
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
-        document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('productType').addEventListener('change', () => {
+            updateCalculator();
+            updateRampTable();
+        });
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
         updateCalculator();
+        updateRampTable();
         updateDealCalculator();
     </script>
 </body>
