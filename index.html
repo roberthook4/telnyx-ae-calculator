@@ -793,12 +793,11 @@
             const baseSalary = parseFloat(document.getElementById('baseSalary').value) || 85000;
             const rates = getSelectedRates();
             const productType = document.getElementById('productType').value;
-            const noCreditLimit = document.getElementById('noCreditLimit').checked;
             const highMMC = document.getElementById('highMMC').checked;
             
             // Calculate effective Y1 rate with bonuses
-            let bonuses = 0;
-            if (noCreditLimit) bonuses += 0.02;
+            // Contract bonus (+2%) is included by default for contracted deals
+            let bonuses = CONTRACT_BONUS; // +2% contract bonus always included
             if (highMMC) bonuses += 0.05;
             const effectiveY1Rate = rates.y1 + bonuses;
             
@@ -810,12 +809,9 @@
             document.getElementById('y1RateDisplay').textContent = rateText;
             document.getElementById('y2RateDisplay').textContent = Math.round(rates.y2 * 100) + '%';
             
-            let descText = `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
-            if (noCreditLimit || highMMC) {
-                let bonusParts = [];
-                if (noCreditLimit) bonusParts.push('+2% no credit');
-                if (highMMC) bonusParts.push('+5% high MMC');
-                descText += ` (${bonusParts.join(', ')})`;
+            let descText = `Based on ${rates.name} products, contracted deals (+2% bonus), 67% gross margin.`;
+            if (highMMC) {
+                descText += ` (+5% high MMC)`;
             }
             document.getElementById('tableDescription').textContent = descText;
             
@@ -826,7 +822,8 @@
                 const monthlyGP = monthlyRevenue * GROSS_MARGIN;
                 
                 // Y1: Use realistic ramp with seasoning + bonuses
-                const y1Commission = calculateYearCommission(1, 5000 * scenario.pct, productType, 'realistic', noCreditLimit, highMMC);
+                // Contract bonus (+2%) always included, highMMC adds +5%
+                const y1Commission = calculateYearCommission(1, 5000 * scenario.pct, productType, 'realistic', true, highMMC);
                 
                 // Y2/Y3: Steady-state with accelerator (no bonuses in Y2+)
                 const y2Commission = calculateYear2Commission(monthlyGP, rates.y2);
