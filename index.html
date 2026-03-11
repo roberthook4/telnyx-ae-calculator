@@ -428,6 +428,13 @@
             </p>
             <div class="input-row" style="margin-bottom: 20px;">
                 <div class="input-group">
+                    <label for="rampMode">Ramp Model</label>
+                    <select id="rampMode">
+                        <option value="quota">At Quota (straight line)</option>
+                        <option value="realistic">Realistic Ramp (curved)</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label for="rampNetNew">Monthly Net New Quota (MRR)</label>
                     <div class="input-with-prefix">
                         <span class="prefix">$</span>
@@ -733,9 +740,13 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
+        // Realistic ramp percentages from spreadsheet (cumulative book as % of fully ramped)
+        const REALISTIC_RAMP = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
+        
         function updateRampTable() {
             const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
             const rampProductType = document.getElementById('rampProduct').value;
+            const rampMode = document.getElementById('rampMode').value;
             const rates = RATES[rampProductType];
             const effectiveRate = rates.y1 + CONTRACT_BONUS;
             
@@ -748,16 +759,26 @@
             
             let tableHTML = '';
             let cumulativeComm = 0;
-            let totalBook = 0;
             let totalNetNew = 0;
             let totalGP = 0;
             let totalComm = 0;
+            let prevBook = 0;
             
             for (let month = 1; month <= 12; month++) {
-                // Each month add net new quota to total book
-                totalBook += netNewQuota;
-                const netNew = netNewQuota;
-                const pctRamp = (month / 12 * 100).toFixed(0);
+                let totalBook, netNew;
+                
+                if (rampMode === 'quota') {
+                    // Straight line: add quota each month
+                    totalBook = netNewQuota * month;
+                    netNew = netNewQuota;
+                } else {
+                    // Realistic: use curved percentages from spreadsheet
+                    totalBook = Math.round(fullyRamped * REALISTIC_RAMP[month - 1]);
+                    netNew = totalBook - prevBook;
+                    prevBook = totalBook;
+                }
+                
+                const pctRamp = (totalBook / fullyRamped * 100).toFixed(0);
                 const gp = totalBook * GROSS_MARGIN;
                 
                 // Get seasoning multiplier
@@ -845,6 +866,7 @@
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
         document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
         document.getElementById('rampProduct').addEventListener('change', updateRampTable);
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
