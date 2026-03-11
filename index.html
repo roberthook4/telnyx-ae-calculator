@@ -424,8 +424,25 @@
         <div class="card">
             <h2>📅 Month-by-Month Ramp (Year 1)</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
-                Realistic progression from first deal to fully ramped ($60k/month revenue).
+                Realistic progression from first deal to fully ramped.
             </p>
+            <div class="input-row" style="margin-bottom: 20px;">
+                <div class="input-group">
+                    <label for="rampQuota">Monthly Revenue Quota (Fully Ramped)</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">$</span>
+                        <input type="number" id="rampQuota" value="60000" min="10000" max="200000" step="5000">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="rampProduct">Product Type</label>
+                    <select id="rampProduct">
+                        <option value="voice">Voice / AI / IOT / SIP</option>
+                        <option value="support">Support / Numbers / MMC</option>
+                        <option value="sms">SMS Messaging</option>
+                    </select>
+                </div>
+            </div>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
@@ -708,11 +725,13 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
-        // Month-by-month ramp data from spreadsheet
-        const RAMP_REVENUE = [5000, 8000, 12000, 16000, 20000, 25000, 30000, 36000, 42000, 48000, 54000, 60000];
+        // Month-by-month ramp percentages (of fully ramped quota)
+        const RAMP_PERCENTAGES = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
         
         function updateRampTable() {
-            const rates = getSelectedRates();
+            const rampQuota = parseFloat(document.getElementById('rampQuota').value) || 60000;
+            const rampProductType = document.getElementById('rampProduct').value;
+            const rates = RATES[rampProductType];
             const effectiveRate = rates.y1 + CONTRACT_BONUS;
             
             let tableHTML = '';
@@ -721,9 +740,10 @@
             let totalGP = 0;
             let totalComm = 0;
             
-            RAMP_REVENUE.forEach((revenue, index) => {
+            RAMP_PERCENTAGES.forEach((pct, index) => {
                 const month = index + 1;
-                const pctQuota = (revenue / MONTHLY_REVENUE_QUOTA * 100).toFixed(0);
+                const revenue = Math.round(rampQuota * pct);
+                const pctQuota = (pct * 100).toFixed(0);
                 const gp = revenue * GROSS_MARGIN;
                 
                 // Get seasoning multiplier
@@ -809,10 +829,9 @@
         
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
-        document.getElementById('productType').addEventListener('change', () => {
-            updateCalculator();
-            updateRampTable();
-        });
+        document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('rampQuota').addEventListener('input', updateRampTable);
+        document.getElementById('rampProduct').addEventListener('change', updateRampTable);
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
