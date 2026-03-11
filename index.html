@@ -424,14 +424,14 @@
         <div class="card">
             <h2>📅 Month-by-Month Ramp (Year 1)</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
-                Realistic progression from first deal to fully ramped.
+                Each month you add net new MRR to your book of business. At quota = <strong id="netNewDisplay">$5,000</strong> net new per month.
             </p>
             <div class="input-row" style="margin-bottom: 20px;">
                 <div class="input-group">
-                    <label for="rampQuota">Monthly Revenue Quota (Fully Ramped)</label>
+                    <label for="rampNetNew">Monthly Net New Quota (MRR)</label>
                     <div class="input-with-prefix">
                         <span class="prefix">$</span>
-                        <input type="number" id="rampQuota" value="60000" min="10000" max="200000" step="5000">
+                        <input type="number" id="rampNetNew" value="5000" min="1000" max="50000" step="1000">
                     </div>
                 </div>
                 <div class="input-group">
@@ -442,18 +442,25 @@
                         <option value="sms">SMS Messaging</option>
                     </select>
                 </div>
+                <div class="input-group">
+                    <label>Fully Ramped (M12)</label>
+                    <div class="rate-display">
+                        <strong id="fullyRampedDisplay">$60,000</strong> MRR = <strong id="arrDisplay">$720k</strong> ARR
+                    </div>
+                </div>
             </div>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
                         <tr>
                             <th>Month</th>
-                            <th>Revenue</th>
-                            <th>% of Quota</th>
+                            <th>Net New</th>
+                            <th>Total Book</th>
+                            <th>% of Ramp</th>
                             <th>Gross Profit</th>
                             <th>Seasoning</th>
                             <th>Commission</th>
-                            <th>Cumulative</th>
+                            <th>Cumulative Comm</th>
                         </tr>
                     </thead>
                     <tbody id="rampTable">
@@ -461,7 +468,8 @@
                     <tfoot style="background: var(--telnyx-green-light); font-weight: 600;">
                         <tr>
                             <td>Year 1 Total</td>
-                            <td id="rampTotalRev">$356,000</td>
+                            <td id="rampTotalNew">$60,000</td>
+                            <td>—</td>
                             <td>—</td>
                             <td id="rampTotalGP">$238,520</td>
                             <td>—</td>
@@ -725,32 +733,38 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
-        // Month-by-month ramp percentages (of fully ramped quota)
-        const RAMP_PERCENTAGES = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
-        
         function updateRampTable() {
-            const rampQuota = parseFloat(document.getElementById('rampQuota').value) || 60000;
+            const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
             const rampProductType = document.getElementById('rampProduct').value;
             const rates = RATES[rampProductType];
             const effectiveRate = rates.y1 + CONTRACT_BONUS;
             
+            // Update displays
+            const fullyRamped = netNewQuota * 12;
+            const arr = fullyRamped * 12;
+            document.getElementById('netNewDisplay').textContent = formatCurrency(netNewQuota);
+            document.getElementById('fullyRampedDisplay').textContent = formatCurrency(fullyRamped);
+            document.getElementById('arrDisplay').textContent = '$' + Math.round(arr / 1000) + 'k';
+            
             let tableHTML = '';
-            let cumulative = 0;
-            let totalRev = 0;
+            let cumulativeComm = 0;
+            let totalBook = 0;
+            let totalNetNew = 0;
             let totalGP = 0;
             let totalComm = 0;
             
-            RAMP_PERCENTAGES.forEach((pct, index) => {
-                const month = index + 1;
-                const revenue = Math.round(rampQuota * pct);
-                const pctQuota = (pct * 100).toFixed(0);
-                const gp = revenue * GROSS_MARGIN;
+            for (let month = 1; month <= 12; month++) {
+                // Each month add net new quota to total book
+                totalBook += netNewQuota;
+                const netNew = netNewQuota;
+                const pctRamp = (month / 12 * 100).toFixed(0);
+                const gp = totalBook * GROSS_MARGIN;
                 
                 // Get seasoning multiplier
                 const multiplier = SEASONING[month] || 1.0;
                 const multiplierLabel = multiplier > 1 ? multiplier + 'x' : '—';
                 
-                // Calculate commission with seasoning
+                // Calculate commission on total book GP with seasoning
                 let baseComm = gp * effectiveRate;
                 let commission = baseComm;
                 if (multiplier > 1) {
@@ -760,8 +774,8 @@
                     commission = baseComm + cappedUplift;
                 }
                 
-                cumulative += commission;
-                totalRev += revenue;
+                cumulativeComm += commission;
+                totalNetNew += netNew;
                 totalGP += gp;
                 totalComm += commission;
                 
@@ -770,18 +784,19 @@
                 tableHTML += `
                     <tr ${highlightClass}>
                         <td>M${month}</td>
-                        <td>${formatCurrency(revenue)}</td>
-                        <td>${pctQuota}%</td>
+                        <td style="color: var(--telnyx-green);">+${formatCurrency(netNew)}</td>
+                        <td>${formatCurrency(totalBook)}</td>
+                        <td>${pctRamp}%</td>
                         <td>${formatCurrency(gp)}</td>
                         <td style="color: ${multiplier > 1 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${multiplier > 1 ? '600' : 'normal'};">${multiplierLabel}</td>
                         <td>${formatCurrency(commission)}</td>
-                        <td>${formatCurrency(cumulative)}</td>
+                        <td>${formatCurrency(cumulativeComm)}</td>
                     </tr>
                 `;
-            });
+            }
             
             document.getElementById('rampTable').innerHTML = tableHTML;
-            document.getElementById('rampTotalRev').textContent = formatCurrency(totalRev);
+            document.getElementById('rampTotalNew').textContent = formatCurrency(totalNetNew);
             document.getElementById('rampTotalGP').textContent = formatCurrency(totalGP);
             document.getElementById('rampTotalComm').textContent = formatCurrency(totalComm);
         }
@@ -830,7 +845,7 @@
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
         document.getElementById('productType').addEventListener('change', updateCalculator);
-        document.getElementById('rampQuota').addEventListener('input', updateRampTable);
+        document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
         document.getElementById('rampProduct').addEventListener('change', updateRampTable);
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
