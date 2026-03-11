@@ -541,7 +541,7 @@
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
                 Monthly gross compensation at 100% quota achievement. Base salary + commission (pre-tax).
             </p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
                 <div>
                     <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-green-dark);">Year 1</h3>
                     <table style="font-size: 0.85rem;">
@@ -561,31 +561,6 @@
                                 <td id="monthlyY1BaseTot">$0</td>
                                 <td id="monthlyY1CommTot">$0</td>
                                 <td id="monthlyY1Total">$0</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div>
-                    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-navy);">Year 2 (New Business + Y1 Residuals)</h3>
-                    <table style="font-size: 0.85rem;">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Base</th>
-                                <th>New Biz Comm</th>
-                                <th>Y1 Residual</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="monthlyY2Table">
-                        </tbody>
-                        <tfoot style="background: var(--bg-primary); font-weight: 600;">
-                            <tr>
-                                <td>Year 2</td>
-                                <td id="monthlyY2BaseTot">$0</td>
-                                <td id="monthlyY2NewCommTot">$0</td>
-                                <td id="monthlyY2ResidualTot">$0</td>
-                                <td id="monthlyY2Total">$0</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -1338,35 +1313,6 @@
             document.getElementById('monthlyY1BaseTot').textContent = formatCurrency(annualSalary);
             document.getElementById('monthlyY1CommTot').textContent = formatCurrency(y1TotalComm);
             document.getElementById('monthlyY1Total').textContent = formatCurrency(annualSalary + y1TotalComm);
-            
-            // Year 2: new business commission + residuals from Y1 deals
-            let y2Html = '';
-            let y2TotalNewComm = 0;
-            let y2TotalResidual = 0;
-            
-            // Y1 Residual: commission on the $60k book built in Y1 (at Y2 rate)
-            const y1BookGP = fullyRampedGP; // $40,200 GP from the $60k book
-            const monthlyResidual = y1BookGP * y2Rate;
-            
-            for (let m = 1; m <= 12; m++) {
-                // Y2 new business: continuing to add $5k net new per month
-                // Book grows from $60k to $120k
-                const y2Book = fullyRampedGP + (netNewQuota * m * GROSS_MARGIN);
-                const newBizComm = (netNewQuota * m * GROSS_MARGIN) * y2Rate; // Commission on new Y2 deals only
-                
-                y2TotalNewComm += newBizComm;
-                y2TotalResidual += monthlyResidual;
-                const monthTotal = monthlySalary + newBizComm + monthlyResidual;
-                
-                y2Html += '<tr><td>M' + (m + 12) + '</td><td>' + formatCurrency(monthlySalary) + '</td><td>' + formatCurrency(newBizComm) + '</td><td>' + formatCurrency(monthlyResidual) + '</td><td>' + formatCurrency(monthTotal) + '</td></tr>';
-            }
-            
-            document.getElementById('monthlyY2Table').innerHTML = y2Html;
-            document.getElementById('monthlyY2BaseTot').textContent = formatCurrency(annualSalary);
-            document.getElementById('monthlyY2NewCommTot').textContent = formatCurrency(y2TotalNewComm);
-            document.getElementById('monthlyY2ResidualTot').textContent = formatCurrency(y2TotalResidual);
-            document.getElementById('monthlyY2Total').textContent = formatCurrency(annualSalary + y2TotalNewComm + y2TotalResidual);
-            
         }
         
         // Initialize
