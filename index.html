@@ -589,6 +589,50 @@
                     </table>
                 </div>
             </div>
+            
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 2px solid var(--border-light);">
+                <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-green-dark);">💰 Year 2 Residuals (from Y1 Deals)</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 0.85rem;">
+                    Deals closed in Year 1 continue to pay commission at the Y2 rate during months 13-24.
+                </p>
+                <div class="input-row" style="margin-bottom: 16px;">
+                    <div class="input-group">
+                        <label for="residualProduct">Product Type</label>
+                        <select id="residualProduct">
+                            <option value="voice">Voice / AI / IOT / SIP</option>
+                            <option value="support">Support / Numbers / MMC</option>
+                            <option value="sms">SMS Messaging</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="residualMRR">Y1 Book Size (MRR at end of Y1)</label>
+                        <div class="input-with-prefix">
+                            <span class="prefix">$</span>
+                            <input type="number" id="residualMRR" value="60000" min="0" max="500000" step="5000">
+                        </div>
+                    </div>
+                </div>
+                <table style="font-size: 0.85rem; max-width: 500px;">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Book GP</th>
+                            <th>Y2 Rate</th>
+                            <th>Residual Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody id="residualTable">
+                    </tbody>
+                    <tfoot style="background: var(--telnyx-green-light); font-weight: 600;">
+                        <tr>
+                            <td>Year 2 Total</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td id="residualTotal">$0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, #FAFBFC 0%, var(--telnyx-green-light) 100%); border: 2px solid var(--telnyx-green);">
@@ -1356,6 +1400,31 @@
             document.getElementById('monthlyY2BaseTot').textContent = formatCurrency(annualSalary);
             document.getElementById('monthlyY2CommTot').textContent = formatCurrency(y2TotalComm);
             document.getElementById('monthlyY2Total').textContent = formatCurrency(annualSalary + y2TotalComm);
+            
+            // Also update residuals
+            updateResiduals();
+        }
+        
+        // Y2 Residuals Calculator
+        function updateResiduals() {
+            const residualProduct = document.getElementById('residualProduct').value;
+            const residualMRR = parseFloat(document.getElementById('residualMRR').value) || 60000;
+            const rates = RATES[residualProduct];
+            const y2Rate = rates.y2;
+            
+            const monthlyGP = residualMRR * GROSS_MARGIN;
+            const monthlyResidual = monthlyGP * y2Rate;
+            
+            let html = '';
+            let totalResidual = 0;
+            
+            for (let m = 13; m <= 24; m++) {
+                totalResidual += monthlyResidual;
+                html += '<tr><td>M' + m + '</td><td>' + formatCurrency(monthlyGP) + '</td><td>' + Math.round(y2Rate * 100) + '%</td><td>' + formatCurrency(monthlyResidual) + '</td></tr>';
+            }
+            
+            document.getElementById('residualTable').innerHTML = html;
+            document.getElementById('residualTotal').textContent = formatCurrency(totalResidual);
         }
         
         // Initialize
@@ -1400,6 +1469,8 @@
         document.getElementById('highMMC').addEventListener('change', function() { syncHighMMC(this); });
         document.getElementById('oteHighMMC').addEventListener('change', function() { syncHighMMC(this); });
         document.getElementById('perfHighMMC').addEventListener('change', function() { syncHighMMC(this); });
+        document.getElementById('residualProduct').addEventListener('change', updateResiduals);
+        document.getElementById('residualMRR').addEventListener('input', updateResiduals);
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
