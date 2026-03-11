@@ -3,21 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Executive Compensation Calculator | Telnyx</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>AE Compensation Calculator | Telnyx</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --telnyx-green: #00C389;
+            --telnyx-green-dark: #00A876;
+            --telnyx-green-light: #E6F9F3;
+            --telnyx-navy: #0F1B2D;
+            --bg-primary: #F8FAFB;
+            --bg-white: #FFFFFF;
+            --text-primary: #1A2B3C;
+            --text-secondary: #5A6B7C;
+            --text-muted: #8A9BAC;
+            --border-light: #E5E9ED;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--telnyx-green);
+            margin-bottom: 8px;
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--telnyx-navy);
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-light);
+        }
+        
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--telnyx-navy);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--telnyx-green-light);
+        }
+        
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .input-group label {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+        
+        .input-with-prefix {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        
+        .input-with-prefix:focus-within {
+            border-color: var(--telnyx-green);
+        }
+        
+        .input-with-prefix .prefix {
+            padding: 10px 12px;
+            background: var(--border-light);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .input-with-prefix input {
+            border: none;
+            padding: 10px 12px;
+            font-size: 1rem;
+            width: 120px;
+            background: transparent;
+        }
+        
+        .input-with-prefix input:focus {
+            outline: none;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, var(--telnyx-navy) 0%, #1a3a5c 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .summary-card.highlight {
+            background: linear-gradient(135deg, var(--telnyx-green-dark) 0%, var(--telnyx-green) 100%);
+        }
+        
+        .summary-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .summary-detail {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+        
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-primary);
+        }
+        
+        tbody tr:hover {
+            background: var(--telnyx-green-light);
+        }
+        
+        tr.highlight-row {
+            background: rgba(0, 195, 137, 0.1);
+            font-weight: 600;
+        }
+        
+        tr.highlight-row td:first-child::before {
+            content: "→ ";
+            color: var(--telnyx-green);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .info-item {
+            background: var(--bg-primary);
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--telnyx-navy);
+        }
+        
+        .note {
+            padding: 16px;
+            background: var(--telnyx-green-light);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-left: 4px solid var(--telnyx-green);
+            margin-top: 16px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Password Protection Overlay -->
+    <!-- Password Protection -->
     <div id="passwordOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0F1B2D 0%,#1a3a5c 100%);display:flex;align-items:center;justify-content:center;z-index:9999;">
         <div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:400px;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
-            <div style="margin-bottom:20px;">
-                <svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <text x="0" y="24" font-family="Inter,sans-serif" font-size="24" font-weight="700" fill="#00C389">telnyx</text>
-                </svg>
-            </div>
+            <div style="font-size:28px;font-weight:700;color:#00C389;margin-bottom:20px;">telnyx</div>
             <h2 style="color:#0F1B2D;margin-bottom:8px;font-family:Inter,sans-serif;">AE Compensation Calculator</h2>
             <p style="color:#5A6B7C;margin-bottom:24px;font-family:Inter,sans-serif;font-size:14px;">Internal use only. Enter password to continue.</p>
             <input type="password" id="passwordInput" placeholder="Enter password" style="width:100%;padding:12px 16px;font-size:16px;border:2px solid #E5E9ED;border-radius:8px;margin-bottom:16px;font-family:Inter,sans-serif;" onkeypress="if(event.key==='Enter')checkPassword()">
@@ -27,16 +272,13 @@
     </div>
     <script>
         function checkPassword() {
-            const pwd = document.getElementById('passwordInput').value;
-            if (pwd === 'telnyx2025') {
+            if (document.getElementById('passwordInput').value === 'telnyx2025') {
                 document.getElementById('passwordOverlay').style.display = 'none';
                 sessionStorage.setItem('ae_calc_auth', 'true');
             } else {
                 document.getElementById('errorMsg').style.display = 'block';
-                document.getElementById('passwordInput').style.borderColor = '#EF4444';
             }
         }
-        // Check if already authenticated this session
         if (sessionStorage.getItem('ae_calc_auth') === 'true') {
             document.getElementById('passwordOverlay').style.display = 'none';
         }
@@ -44,377 +286,252 @@
 
     <div class="container">
         <header>
-            <div class="logo">
-                <svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <text x="0" y="24" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="#00C389">telnyx</text>
-                </svg>
-            </div>
-            <h1>Account Executive Compensation Calculator</h1>
-            <p class="subtitle">2025 Commission Plan</p>
+            <div class="logo">telnyx</div>
+            <h1>AE Compensation Calculator</h1>
+            <p class="subtitle">2025 Commission Plan • 3-Year Model</p>
         </header>
 
-        <!-- Summary Card -->
-        <div class="summary-card">
-            <div class="summary-grid">
-                <div class="summary-item highlight">
-                    <span class="summary-label">Year 1 Total Comp (with Ramp)</span>
-                    <span class="summary-value" id="year1TotalComp">$0</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Year 1 at Full Productivity</span>
-                    <span class="summary-value" id="year1FullProd">$0</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Year 2 Residual Commission</span>
-                    <span class="summary-value" id="year2Residual">$0</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Monthly Commission (Steady State)</span>
-                    <span class="summary-value" id="monthlyCommission">$0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Section -->
-        <div class="card-grid">
-            <!-- Base Compensation -->
-            <div class="card">
-                <h2>Base Compensation</h2>
+        <div class="card">
+            <h2>📊 Inputs</h2>
+            <div class="input-row">
                 <div class="input-group">
-                    <label for="baseSalary">Annual Base Salary</label>
+                    <label for="baseSalary">Base Salary</label>
                     <div class="input-with-prefix">
                         <span class="prefix">$</span>
-                        <input type="number" id="baseSalary" value="70000" min="0" max="200000" step="1000">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="rampPeriod">Ramp Period (Months)</label>
-                    <select id="rampPeriod">
-                        <option value="3">3 months</option>
-                        <option value="4">4 months</option>
-                        <option value="5">5 months</option>
-                        <option value="6" selected>6 months</option>
-                    </select>
-                    <span class="input-help">Duration of seasoning adjustment</span>
-                </div>
-            </div>
-
-            <!-- Performance -->
-            <div class="card">
-                <h2>Performance</h2>
-                <div class="input-group">
-                    <label for="monthlyGP">Monthly Gross Profit Closed</label>
-                    <div class="slider-container">
-                        <input type="range" id="monthlyGPSlider" min="0" max="100000" value="7500" step="500">
-                        <div class="input-with-prefix compact">
-                            <span class="prefix">$</span>
-                            <input type="number" id="monthlyGP" value="7500" min="0" max="100000" step="500">
-                        </div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label for="quota">Monthly Quota (GP Target)</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">$</span>
-                        <input type="number" id="quota" value="5000" min="0" max="50000" step="500">
-                    </div>
-                    <span class="input-help">+10% accelerator on GP above quota</span>
-                </div>
-                <div class="quota-attainment">
-                    <span>Quota Attainment:</span>
-                    <span id="quotaAttainment" class="badge">150%</span>
-                </div>
-            </div>
-
-            <!-- Product Mix -->
-            <div class="card">
-                <h2>Product Mix</h2>
-                <p class="card-description">Adjust the mix of products you expect to sell. Must equal 100%.</p>
-                
-                <div class="input-group">
-                    <div class="label-row">
-                        <label>SMS Messaging</label>
-                        <span class="percentage" id="smsPercent">20%</span>
-                    </div>
-                    <input type="range" id="smsSlider" min="0" max="100" value="20" class="slider-sms">
-                    <span class="input-help">Lower commission tier</span>
-                </div>
-                
-                <div class="input-group">
-                    <div class="label-row">
-                        <label>Voice/SIP/AI/IoT/Storage</label>
-                        <span class="percentage" id="voicePercent">60%</span>
-                    </div>
-                    <input type="range" id="voiceSlider" min="0" max="100" value="60" class="slider-voice">
-                    <span class="input-help">Higher commission tier</span>
-                </div>
-                
-                <div class="input-group">
-                    <div class="label-row">
-                        <label>Support/Numbers/MMC</label>
-                        <span class="percentage" id="supportPercent">20%</span>
-                    </div>
-                    <input type="range" id="supportSlider" min="0" max="100" value="20" class="slider-support">
-                    <span class="input-help">Medium commission tier</span>
-                </div>
-                
-                <div class="mix-total" id="mixTotal">
-                    <span>Total:</span>
-                    <span id="mixTotalValue">100%</span>
-                </div>
-            </div>
-
-            <!-- Contract Type -->
-            <div class="card">
-                <h2>Contract Type</h2>
-                <p class="card-description">Contracted deals earn higher commission rates.</p>
-                
-                <div class="input-group">
-                    <div class="label-row">
-                        <label>Contracted</label>
-                        <span class="percentage" id="contractedPercent">70%</span>
-                    </div>
-                    <input type="range" id="contractedSlider" min="0" max="100" value="70">
-                </div>
-                
-                <div class="contract-split">
-                    <div class="split-item">
-                        <span class="split-label">Contracted</span>
-                        <span class="split-value" id="contractedValue">70%</span>
-                    </div>
-                    <div class="split-item">
-                        <span class="split-label">Non-Contracted</span>
-                        <span class="split-value" id="nonContractedValue">30%</span>
+                        <input type="number" id="baseSalary" value="85000" min="50000" max="150000" step="5000">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Example Deal Calculator -->
-        <div class="card full-width deal-calculator">
-            <h2>💰 Example Deal Calculator</h2>
-            <p class="card-description">See exactly what you'd earn on a specific deal.</p>
-            
-            <div class="deal-inputs">
-                <div class="deal-input-group">
-                    <label for="dealMRR">Deal Size (Monthly GP)</label>
-                    <div class="input-with-prefix">
-                        <span class="prefix">$</span>
-                        <input type="number" id="dealMRR" value="5000" min="0" max="500000" step="100">
-                    </div>
-                    <span class="input-help">Monthly gross profit from this deal</span>
-                </div>
-                
-                <div class="deal-input-group">
-                    <label for="dealProduct">Product Type</label>
-                    <select id="dealProduct">
-                        <option value="voice">Voice / SIP / AI / IoT / Storage</option>
-                        <option value="sms">SMS Messaging</option>
-                        <option value="support">Support / Numbers / MMC</option>
-                    </select>
-                </div>
-                
-                <div class="deal-input-group">
-                    <label for="dealContracted">Contract Type</label>
-                    <select id="dealContracted">
-                        <option value="contracted">Contracted</option>
-                        <option value="noncontracted">Non-Contracted</option>
-                    </select>
-                </div>
-                
-                <div class="deal-input-group">
-                    <label for="dealType">Deal Type</label>
-                    <select id="dealType">
-                        <option value="new">New Business (24-month payout)</option>
-                        <option value="upsell">Upsell (12-month payout)</option>
-                    </select>
-                </div>
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">At Quota (100%)</div>
+                <div class="summary-value" id="atQuotaTotal">$213,592</div>
+                <div class="summary-detail">Year 1 Total Comp</div>
             </div>
-            
-            <div class="deal-results">
-                <div class="deal-result-card">
-                    <span class="deal-result-label">Year 1 Commission</span>
-                    <span class="deal-result-value" id="dealYear1">$0</span>
-                    <span class="deal-result-detail" id="dealYear1Detail">$0/mo × 12 months</span>
-                </div>
-                <div class="deal-result-card">
-                    <span class="deal-result-label">Year 2 Commission</span>
-                    <span class="deal-result-value" id="dealYear2">$0</span>
-                    <span class="deal-result-detail" id="dealYear2Detail">$0/mo × 12 months</span>
-                </div>
-                <div class="deal-result-card highlight">
-                    <span class="deal-result-label">Total Payout</span>
-                    <span class="deal-result-value" id="dealTotal">$0</span>
-                    <span class="deal-result-detail" id="dealTotalDetail">Over 24 months</span>
-                </div>
+            <div class="summary-card highlight">
+                <div class="summary-label">Strong Performer (150%)</div>
+                <div class="summary-value" id="strongTotal">$257,008</div>
+                <div class="summary-detail">Year 1 Total Comp</div>
             </div>
-            
-            <div class="deal-note">
-                <strong>Note:</strong> This shows commission on a single deal at base rates (no ramp multiplier). During your ramp period, actual payouts would be higher.
+            <div class="summary-card">
+                <div class="summary-label">Top Performer (200%)</div>
+                <div class="summary-value" id="topTotal">$300,424</div>
+                <div class="summary-detail">Year 1 Total Comp</div>
             </div>
         </div>
 
-        <!-- Scenario Table -->
-        <div class="card full-width">
-            <h2>Earnings by Quota Attainment</h2>
-            <p class="card-description">See how your compensation changes at different performance levels.</p>
-            
-            <div class="table-container">
-                <table class="scenario-table">
+        <div class="card">
+            <h2>💰 Compensation by Performance Level</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                Based on Voice/AI/IOT products (highest commission tier), contracted deals, 67% gross margin.
+            </p>
+            <div style="overflow-x: auto;">
+                <table>
                     <thead>
                         <tr>
-                            <th>Attainment</th>
-                            <th>Monthly GP</th>
-                            <th>Monthly Commission</th>
-                            <th>Year 1 Total Comp</th>
-                            <th>Year 2 Residual</th>
+                            <th>Performance</th>
+                            <th>Monthly Revenue</th>
+                            <th>% of Quota</th>
+                            <th>Y1 Commission</th>
+                            <th>Y1 Total Comp</th>
+                            <th>Y2 Total Comp</th>
+                            <th>3-Year Total</th>
                         </tr>
                     </thead>
-                    <tbody id="scenarioTableBody">
-                        <!-- Populated by JS -->
+                    <tbody id="scenarioTable">
                     </tbody>
                 </table>
             </div>
+            <div class="note">
+                <strong>Year 1 is where you maximize earnings.</strong> Seasoning multipliers (up to 3x) and higher rates create significant upside. Voice/AI/IOT pays ~2.4x more than SMS for the same GP.
+            </div>
         </div>
 
-        <!-- Commission Breakdown -->
-        <div class="card full-width">
-            <h2>Commission Structure Details</h2>
-            <div class="commission-grid">
-                <div class="commission-category">
-                    <h3>SMS Messaging</h3>
-                    <div class="rate-table">
-                        <div class="rate-row header">
-                            <span></span>
-                            <span>Contracted</span>
-                            <span>Non-Contracted</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Base</span>
-                            <span>8.5%</span>
-                            <span>6%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Variable</span>
-                            <span>3.5%</span>
-                            <span>2.5%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Base</span>
-                            <span>5%</span>
-                            <span>5%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Variable</span>
-                            <span>1.25%</span>
-                            <span>1.25%</span>
-                        </div>
-                    </div>
+        <div class="card">
+            <h2>📈 Key Numbers</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Fully Ramped Target</div>
+                    <div class="info-value">$60k/month</div>
                 </div>
-                
-                <div class="commission-category">
-                    <h3>Voice/SIP/AI/IoT/Storage</h3>
-                    <div class="rate-table">
-                        <div class="rate-row header">
-                            <span></span>
-                            <span>Contracted</span>
-                            <span>Non-Contracted</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Base</span>
-                            <span>30%</span>
-                            <span>20%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Variable</span>
-                            <span>7%</span>
-                            <span>5%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Base</span>
-                            <span>15%</span>
-                            <span>15%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Variable</span>
-                            <span>2.5%</span>
-                            <span>2.5%</span>
-                        </div>
-                    </div>
+                <div class="info-item">
+                    <div class="info-label">Annual Run Rate</div>
+                    <div class="info-value">$720k ARR</div>
                 </div>
-                
-                <div class="commission-category">
-                    <h3>Support/Numbers/MMC</h3>
-                    <div class="rate-table">
-                        <div class="rate-row header">
-                            <span></span>
-                            <span>Contracted</span>
-                            <span>Non-Contracted</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Base</span>
-                            <span>17%</span>
-                            <span>12%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 1 Variable</span>
-                            <span>7%</span>
-                            <span>5%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Base</span>
-                            <span>10%</span>
-                            <span>10%</span>
-                        </div>
-                        <div class="rate-row">
-                            <span>Year 2 Variable</span>
-                            <span>2.5%</span>
-                            <span>2.5%</span>
-                        </div>
-                    </div>
+                <div class="info-item">
+                    <div class="info-label">Gross Margin</div>
+                    <div class="info-value">67%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Monthly GP Quota</div>
+                    <div class="info-value">$40,200</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Y1 Commission Rate</div>
+                    <div class="info-value">30-37%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Quota Accelerator</div>
+                    <div class="info-value">+10% above quota</div>
                 </div>
             </div>
         </div>
 
-        <!-- Ramp Info -->
-        <div class="card full-width info-card">
-            <h2>Seasoning Adjustment (New AE Ramp)</h2>
-            <p class="card-description">New AEs receive commission multipliers during their ramp period to accelerate earnings.</p>
-            
-            <div class="ramp-grid">
-                <div class="ramp-item">
-                    <span class="ramp-period">Months 1-2</span>
-                    <span class="ramp-multiplier">3x</span>
-                    <span class="ramp-cap">Cap: $10k/mo uplift</span>
+        <div class="card">
+            <h2>🚀 Seasoning Adjustment (Year 1 Boost)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                Your commission is multiplied during your first 9 months to help you ramp:
+            </p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Months 1-2</div>
+                    <div class="info-value" style="color: var(--telnyx-green);">3x multiplier</div>
                 </div>
-                <div class="ramp-item">
-                    <span class="ramp-period">Months 3-5</span>
-                    <span class="ramp-multiplier">2.5x</span>
-                    <span class="ramp-cap">Cap: $10k/mo uplift</span>
+                <div class="info-item">
+                    <div class="info-label">Months 3-5</div>
+                    <div class="info-value" style="color: var(--telnyx-green);">2.5x multiplier</div>
                 </div>
-                <div class="ramp-item">
-                    <span class="ramp-period">Months 6-9</span>
-                    <span class="ramp-multiplier">2x</span>
-                    <span class="ramp-cap">Cap: $10k/mo uplift</span>
+                <div class="info-item">
+                    <div class="info-label">Months 6-9</div>
+                    <div class="info-value" style="color: var(--telnyx-green);">2x multiplier</div>
                 </div>
-                <div class="ramp-item">
-                    <span class="ramp-period">Month 10+</span>
-                    <span class="ramp-multiplier">1x</span>
-                    <span class="ramp-cap">No adjustment</span>
+                <div class="info-item">
+                    <div class="info-label">Month 10+</div>
+                    <div class="info-value">Standard rate</div>
                 </div>
             </div>
-            
-            <div class="ramp-note">
-                <strong>Quota Accelerator:</strong> Once you exceed quota, earn an additional 10% on GP above your target. Max payout at 200% attainment.
+            <div class="note">
+                Each multiplier is capped at $10k/month additional earnings. Close deals early to capture the full benefit.
             </div>
         </div>
 
         <footer>
-            <p>This calculator is for illustrative purposes only. Actual compensation may vary based on individual agreements and plan terms.</p>
-            <p class="copyright">© 2025 Telnyx. All rights reserved.</p>
+            <p>This calculator is for illustrative purposes only. Actual compensation may vary.</p>
+            <p>© 2025 Telnyx. Internal use only.</p>
         </footer>
     </div>
 
-    <script src="calculator.js"></script>
+    <script>
+        // Constants from the comp plan
+        const GROSS_MARGIN = 0.67;
+        const MONTHLY_REVENUE_QUOTA = 60000;
+        const MONTHLY_GP_QUOTA = MONTHLY_REVENUE_QUOTA * GROSS_MARGIN; // 40,200
+        const ANNUAL_GP_QUOTA = MONTHLY_GP_QUOTA * 12; // 482,400
+        
+        // Commission rates (Voice/AI/IOT, Contracted with no credit limit)
+        const Y1_BASE_RATE = 0.30;
+        const CONTRACT_BONUS = 0.02; // No credit limit bonus
+        const Y1_EFFECTIVE_RATE = Y1_BASE_RATE + CONTRACT_BONUS; // 0.32
+        const Y2_RATE = 0.15;
+        const ACCELERATOR_RATE = 0.10;
+        
+        // Seasoning multipliers by month
+        const SEASONING = {
+            1: 3.0, 2: 3.0,
+            3: 2.5, 4: 2.5, 5: 2.5,
+            6: 2.0, 7: 2.0, 8: 2.0, 9: 2.0,
+        };
+        const SEASONING_CAP = 10000;
+        
+        // Performance scenarios
+        const SCENARIOS = [
+            { name: 'Ramping', pct: 0.5 },
+            { name: 'At Quota', pct: 1.0, highlight: true },
+            { name: 'Strong', pct: 1.5 },
+            { name: 'Excellent', pct: 2.0 },
+            { name: 'Outstanding', pct: 2.5 },
+            { name: 'Top 1%', pct: 3.0 },
+        ];
+        
+        function formatCurrency(amount) {
+            return '$' + Math.round(amount).toLocaleString();
+        }
+        
+        function calculateYear1Commission(monthlyGP) {
+            let totalCommission = 0;
+            
+            for (let month = 1; month <= 12; month++) {
+                let baseCommission = monthlyGP * Y1_EFFECTIVE_RATE;
+                
+                // Apply seasoning if applicable
+                if (SEASONING[month]) {
+                    let seasonedCommission = baseCommission * SEASONING[month];
+                    let uplift = seasonedCommission - baseCommission;
+                    let cappedUplift = Math.min(uplift, SEASONING_CAP);
+                    baseCommission = baseCommission + cappedUplift;
+                }
+                
+                totalCommission += baseCommission;
+            }
+            
+            return totalCommission;
+        }
+        
+        function calculateYear2Commission(monthlyGP) {
+            let baseCommission = monthlyGP * Y2_RATE * 12;
+            
+            // Add accelerator if above quota
+            let annualGP = monthlyGP * 12;
+            if (annualGP > ANNUAL_GP_QUOTA) {
+                let gpAboveQuota = annualGP - ANNUAL_GP_QUOTA;
+                baseCommission += gpAboveQuota * ACCELERATOR_RATE;
+            }
+            
+            return baseCommission;
+        }
+        
+        function updateCalculator() {
+            const baseSalary = parseFloat(document.getElementById('baseSalary').value) || 85000;
+            const annualSalary = baseSalary;
+            const threeyearSalary = baseSalary * 3;
+            
+            let tableHTML = '';
+            
+            SCENARIOS.forEach(scenario => {
+                const monthlyRevenue = MONTHLY_REVENUE_QUOTA * scenario.pct;
+                const monthlyGP = monthlyRevenue * GROSS_MARGIN;
+                
+                const y1Commission = calculateYear1Commission(monthlyGP);
+                const y2Commission = calculateYear2Commission(monthlyGP);
+                const y3Commission = y2Commission; // Same as Y2
+                
+                const y1Total = annualSalary + y1Commission;
+                const y2Total = annualSalary + y2Commission;
+                const y3Total = annualSalary + y3Commission;
+                const threeYearTotal = y1Total + y2Total + y3Total;
+                
+                const rowClass = scenario.highlight ? 'highlight-row' : '';
+                
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td>${scenario.name} (${Math.round(scenario.pct * 100)}%)</td>
+                        <td>${formatCurrency(monthlyRevenue)}</td>
+                        <td>${Math.round(scenario.pct * 100)}%</td>
+                        <td>${formatCurrency(y1Commission)}</td>
+                        <td>${formatCurrency(y1Total)}</td>
+                        <td>${formatCurrency(y2Total)}</td>
+                        <td>${formatCurrency(threeYearTotal)}</td>
+                    </tr>
+                `;
+                
+                // Update summary cards
+                if (scenario.pct === 1.0) {
+                    document.getElementById('atQuotaTotal').textContent = formatCurrency(y1Total);
+                } else if (scenario.pct === 1.5) {
+                    document.getElementById('strongTotal').textContent = formatCurrency(y1Total);
+                } else if (scenario.pct === 2.0) {
+                    document.getElementById('topTotal').textContent = formatCurrency(y1Total);
+                }
+            });
+            
+            document.getElementById('scenarioTable').innerHTML = tableHTML;
+        }
+        
+        // Initialize
+        document.getElementById('baseSalary').addEventListener('input', updateCalculator);
+        updateCalculator();
+    </script>
 </body>
 </html>
