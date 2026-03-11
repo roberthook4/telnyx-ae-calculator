@@ -485,6 +485,7 @@
                             <th>Total Book</th>
                             <th>Gross Profit</th>
                             <th id="seasoningHeader">Seasoning</th>
+                            <th>Base Comm</th>
                             <th>Comm (w/ Seasoning)</th>
                             <th>12-Mo Rolling GP</th>
                             <th>GP Above Quota</th>
@@ -502,6 +503,7 @@
                             <td>—</td>
                             <td id="rampTotalGP">$238,520</td>
                             <td>—</td>
+                            <td id="rampTotalBaseNoSeason">—</td>
                             <td id="rampTotalBase">—</td>
                             <td>—</td>
                             <td>—</td>
@@ -864,6 +866,7 @@
             let totalNetNew = 0;
             let totalGP = 0;
             let totalComm = 0;
+            let totalBaseNoSeason = 0;
             let totalBase = 0;
             let totalAccel = 0;
             let prevBook = rampYear === 1 ? 0 : (rampYear === 2 ? fullyRamped : fullyRamped * 2);
@@ -977,6 +980,7 @@
                 totalNetNew += netNew;
                 totalGP += gp;
                 totalComm += commission;
+                totalBaseNoSeason += baseComm;
                 totalBase += seasonedComm;
                 totalAccel += accelerator;
                 
@@ -992,7 +996,8 @@
                         <td>${formatCurrency(totalBook)}</td>
                         <td>${formatCurrency(gp)}</td>
                         <td style="color: ${multiplier > 1 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${multiplier > 1 ? '600' : 'normal'};">${multiplierLabel}</td>
-                        <td>${formatCurrency(seasonedComm)}</td>
+                        <td>${formatCurrency(baseComm)}</td>
+                        <td style="color: ${multiplier > 1 ? 'var(--telnyx-green)' : 'inherit'};">${formatCurrency(seasonedComm)}</td>
                         <td>${rollingDisplay}</td>
                         <td>${gpAboveQuota > 0 ? formatCurrency(gpAboveQuota) : '—'}</td>
                         <td style="color: ${accelerator > 0 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${accelerator > 0 ? '600' : 'normal'};">${accelerator > 0 ? formatCurrency(accelerator) : '—'}</td>
@@ -1006,6 +1011,7 @@
             document.getElementById('rampYearLabel').textContent = `Year ${rampYear} Total`;
             document.getElementById('rampTotalNew').textContent = formatCurrency(totalNetNew);
             document.getElementById('rampTotalGP').textContent = formatCurrency(totalGP);
+            document.getElementById('rampTotalBaseNoSeason').textContent = formatCurrency(totalBaseNoSeason);
             document.getElementById('rampTotalBase').textContent = formatCurrency(totalBase);
             document.getElementById('rampTotalAccel').textContent = totalAccel > 0 ? formatCurrency(totalAccel) : '—';
             document.getElementById('rampTotalComm').textContent = formatCurrency(totalComm);
