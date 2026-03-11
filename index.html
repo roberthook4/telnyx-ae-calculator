@@ -750,10 +750,11 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
-        // Realistic ramp percentages from spreadsheet (cumulative book as % of fully ramped)
-        const REALISTIC_RAMP_Y1 = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
-        // Year 2 continues growing from fully ramped
-        const REALISTIC_RAMP_Y2 = [1.083, 1.167, 1.25, 1.333, 1.417, 1.50, 1.583, 1.667, 1.75, 1.833, 1.917, 2.0];
+        // Realistic ramp - exact values from spreadsheet (base $60k fully ramped)
+        // These are the actual cumulative book values, will scale proportionally
+        const REALISTIC_RAMP_Y1_BASE = [5000, 8000, 12000, 16000, 20000, 25000, 30000, 36000, 42000, 48000, 54000, 60000];
+        // Year 2 continues growing from $60k
+        const REALISTIC_RAMP_Y2_BASE = [65000, 70000, 75000, 80000, 85000, 90000, 95000, 100000, 105000, 110000, 115000, 120000];
         
         function updateRampTable() {
             const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
@@ -783,7 +784,9 @@
             document.getElementById('fullyRampedDisplay').textContent = formatCurrency(fullyRamped);
             document.getElementById('arrDisplay').textContent = '$' + Math.round(arr / 1000) + 'k';
             
-            const REALISTIC_RAMP = isYear1 ? REALISTIC_RAMP_Y1 : REALISTIC_RAMP_Y2;
+            const REALISTIC_RAMP_BASE = isYear1 ? REALISTIC_RAMP_Y1_BASE : REALISTIC_RAMP_Y2_BASE;
+            const baseFullyRamped = 60000; // The base values assume $60k fully ramped
+            const scaleFactor = fullyRamped / baseFullyRamped;
             const startBook = isYear1 ? 0 : fullyRamped; // Year 2 starts with full book from Year 1
             
             let tableHTML = '';
@@ -801,8 +804,8 @@
                     totalBook = startBook + (netNewQuota * month);
                     netNew = netNewQuota;
                 } else {
-                    // Realistic: use curved percentages from spreadsheet
-                    totalBook = Math.round(fullyRamped * REALISTIC_RAMP[month - 1]);
+                    // Realistic: use exact values from spreadsheet, scaled
+                    totalBook = Math.round(REALISTIC_RAMP_BASE[month - 1] * scaleFactor);
                     netNew = totalBook - prevBook;
                     prevBook = totalBook;
                 }
