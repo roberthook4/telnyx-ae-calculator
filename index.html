@@ -730,7 +730,7 @@
         }
         
         function getSelectedRates() {
-            const productType = document.getElementById('productType').value;
+            const productType = document.getElementById('oteProduct').value;
             return RATES[productType];
         }
         
@@ -767,9 +767,9 @@
         }
         
         function updateCalculator() {
-            const baseSalary = parseFloat(document.getElementById('baseSalary').value) || 85000;
-            const rates = getSelectedRates();
-            const productType = document.getElementById('productType').value;
+            const baseSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
+            const productType = document.getElementById('oteProduct').value;
+            const rates = RATES[productType];
             const noCreditLimit = document.getElementById('noCreditLimit').checked;
             const highMMC = document.getElementById('highMMC').checked;
             
@@ -779,13 +779,11 @@
             if (highMMC) bonuses += 0.05;
             const effectiveY1Rate = rates.y1 + bonuses;
             
-            // Update rate display
+            // Calculate rate display text
             let rateText = Math.round(rates.y1 * 100) + '%';
             if (bonuses > 0) {
                 rateText = Math.round(effectiveY1Rate * 100) + '%';
             }
-            document.getElementById('y1RateDisplay').textContent = rateText;
-            document.getElementById('y2RateDisplay').textContent = Math.round(rates.y2 * 100) + '%';
             
             let descText = `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
             if (noCreditLimit || highMMC) {
@@ -830,14 +828,7 @@
                     </tr>
                 `;
                 
-                // Summary cards
-                if (scenario.pct === 1.0) {
-                    document.getElementById('atQuotaTotal').textContent = formatCurrency(y1Total);
-                } else if (scenario.pct === 1.5) {
-                    document.getElementById('strongTotal').textContent = formatCurrency(y1Total);
-                } else if (scenario.pct === 2.0) {
-                    document.getElementById('topTotal').textContent = formatCurrency(y1Total);
-                }
+                // (Summary cards removed)
             });
             
             document.getElementById('scenarioTable').innerHTML = tableHTML;
@@ -1246,8 +1237,8 @@
         }
         
         // Initialize
-        document.getElementById('baseSalary').addEventListener('input', updateCalculator);
-        document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('oteSalary').addEventListener('change', updateCalculator);
+        document.getElementById('oteProduct').addEventListener('change', updateCalculator);
         document.getElementById('rampYear').addEventListener('change', updateRampTable);
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
