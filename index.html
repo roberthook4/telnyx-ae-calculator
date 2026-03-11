@@ -398,6 +398,15 @@
                         <option value="upsell">Upsell (12-mo payout)</option>
                     </select>
                 </div>
+                <div class="input-group">
+                    <label for="dealSeasoning">Seasoning Factor</label>
+                    <select id="dealSeasoning">
+                        <option value="1">— (No seasoning)</option>
+                        <option value="2">2x (Months 6-9)</option>
+                        <option value="2.5">2.5x (Months 3-5)</option>
+                        <option value="3">3x (Months 1-2)</option>
+                    </select>
+                </div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px;">
                 <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
@@ -1022,14 +1031,24 @@
             const mrr = parseFloat(document.getElementById('dealMRR').value) || 0;
             const productType = document.getElementById('dealProduct').value;
             const dealType = document.getElementById('dealType').value;
+            const seasoningMultiplier = parseFloat(document.getElementById('dealSeasoning').value) || 1;
             const isNewBusiness = dealType === 'new';
             
             const rates = RATES[productType];
             const monthlyGP = mrr * GROSS_MARGIN;
             
-            // Calculate monthly commission (at base rate, no seasoning for simplicity)
-            const y1MonthlyComm = monthlyGP * (rates.y1 + CONTRACT_BONUS);
+            // Calculate monthly commission at base rate
+            const y1BaseMonthlyComm = monthlyGP * (rates.y1 + CONTRACT_BONUS);
             const y2MonthlyComm = monthlyGP * rates.y2;
+            
+            // Apply seasoning multiplier with $10k cap on uplift
+            let y1MonthlyComm = y1BaseMonthlyComm;
+            if (seasoningMultiplier > 1) {
+                const fullSeasonedComm = y1BaseMonthlyComm * seasoningMultiplier;
+                const uplift = fullSeasonedComm - y1BaseMonthlyComm;
+                const cappedUplift = Math.min(uplift, SEASONING_CAP);
+                y1MonthlyComm = y1BaseMonthlyComm + cappedUplift;
+            }
             
             const y1Total = y1MonthlyComm * 12;
             const y2Total = isNewBusiness ? (y2MonthlyComm * 12) : 0;
@@ -1038,7 +1057,8 @@
             
             // Update display
             document.getElementById('dealY1').textContent = formatCurrency(y1Total);
-            document.getElementById('dealY1Detail').textContent = formatCurrency(y1MonthlyComm) + '/mo × 12';
+            const seasoningNote = seasoningMultiplier > 1 ? ' (w/ ' + seasoningMultiplier + 'x)' : '';
+            document.getElementById('dealY1Detail').textContent = formatCurrency(y1MonthlyComm) + '/mo × 12' + seasoningNote;
             
             if (isNewBusiness) {
                 document.getElementById('dealY2').textContent = formatCurrency(y2Total);
@@ -1070,6 +1090,7 @@
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
+        document.getElementById('dealSeasoning').addEventListener('change', updateDealCalculator);
         updateCalculator();
         updateRampTable();
         updateDealCalculator();
