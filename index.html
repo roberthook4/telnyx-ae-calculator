@@ -428,6 +428,13 @@
             </p>
             <div class="input-row" style="margin-bottom: 20px;">
                 <div class="input-group">
+                    <label for="rampYear">Year</label>
+                    <select id="rampYear">
+                        <option value="1">Year 1 (Higher rates + Seasoning)</option>
+                        <option value="2">Year 2 (Reduced rates, no seasoning)</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label for="rampMode">Ramp Model</label>
                     <select id="rampMode">
                         <option value="quota">At Quota (straight line)</option>
@@ -455,6 +462,9 @@
                         <strong id="fullyRampedDisplay">$60,000</strong> MRR = <strong id="arrDisplay">$720k</strong> ARR
                     </div>
                 </div>
+            </div>
+            <div id="rampRateInfo" style="margin-bottom: 16px; padding: 12px 16px; background: var(--telnyx-green-light); border-radius: 8px; font-size: 0.9rem;">
+                <strong>Year 1 Rate:</strong> <span id="rampRateDisplay">32%</span> (30% base + 2% contract bonus) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)
             </div>
             <div style="overflow-x: auto;">
                 <table>
@@ -741,14 +751,30 @@
         }
         
         // Realistic ramp percentages from spreadsheet (cumulative book as % of fully ramped)
-        const REALISTIC_RAMP = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
+        const REALISTIC_RAMP_Y1 = [0.083, 0.133, 0.20, 0.267, 0.333, 0.417, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
+        // Year 2 continues growing from fully ramped
+        const REALISTIC_RAMP_Y2 = [1.083, 1.167, 1.25, 1.333, 1.417, 1.50, 1.583, 1.667, 1.75, 1.833, 1.917, 2.0];
         
         function updateRampTable() {
             const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
             const rampProductType = document.getElementById('rampProduct').value;
             const rampMode = document.getElementById('rampMode').value;
+            const rampYear = document.getElementById('rampYear').value;
             const rates = RATES[rampProductType];
-            const effectiveRate = rates.y1 + CONTRACT_BONUS;
+            
+            const isYear1 = rampYear === '1';
+            const effectiveRate = isYear1 ? (rates.y1 + CONTRACT_BONUS) : rates.y2;
+            
+            // Update rate info display
+            const ratePercent = Math.round(effectiveRate * 100);
+            const rateInfo = document.getElementById('rampRateInfo');
+            if (isYear1) {
+                rateInfo.innerHTML = `<strong>Year 1 Rate:</strong> ${ratePercent}% (${Math.round(rates.y1 * 100)}% base + 2% contract bonus) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)`;
+                rateInfo.style.background = 'var(--telnyx-green-light)';
+            } else {
+                rateInfo.innerHTML = `<strong>Year 2 Rate:</strong> ${ratePercent}% (reduced rate) &nbsp;|&nbsp; <strong>Seasoning:</strong> None`;
+                rateInfo.style.background = '#FEF3C7';
+            }
             
             // Update displays
             const fullyRamped = netNewQuota * 12;
@@ -757,19 +783,22 @@
             document.getElementById('fullyRampedDisplay').textContent = formatCurrency(fullyRamped);
             document.getElementById('arrDisplay').textContent = '$' + Math.round(arr / 1000) + 'k';
             
+            const REALISTIC_RAMP = isYear1 ? REALISTIC_RAMP_Y1 : REALISTIC_RAMP_Y2;
+            const startBook = isYear1 ? 0 : fullyRamped; // Year 2 starts with full book from Year 1
+            
             let tableHTML = '';
             let cumulativeComm = 0;
             let totalNetNew = 0;
             let totalGP = 0;
             let totalComm = 0;
-            let prevBook = 0;
+            let prevBook = startBook;
             
             for (let month = 1; month <= 12; month++) {
                 let totalBook, netNew;
                 
                 if (rampMode === 'quota') {
                     // Straight line: add quota each month
-                    totalBook = netNewQuota * month;
+                    totalBook = startBook + (netNewQuota * month);
                     netNew = netNewQuota;
                 } else {
                     // Realistic: use curved percentages from spreadsheet
@@ -778,11 +807,13 @@
                     prevBook = totalBook;
                 }
                 
-                const pctRamp = (totalBook / fullyRamped * 100).toFixed(0);
+                const pctRamp = isYear1 
+                    ? (totalBook / fullyRamped * 100).toFixed(0)
+                    : ((totalBook / fullyRamped) * 100).toFixed(0);
                 const gp = totalBook * GROSS_MARGIN;
                 
-                // Get seasoning multiplier
-                const multiplier = SEASONING[month] || 1.0;
+                // Get seasoning multiplier (Year 1 only)
+                const multiplier = isYear1 ? (SEASONING[month] || 1.0) : 1.0;
                 const multiplierLabel = multiplier > 1 ? multiplier + 'x' : '—';
                 
                 // Calculate commission on total book GP with seasoning
@@ -866,6 +897,7 @@
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
         document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('rampYear').addEventListener('change', updateRampTable);
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
         document.getElementById('rampProduct').addEventListener('change', updateRampTable);
