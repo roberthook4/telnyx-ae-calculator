@@ -539,6 +539,14 @@
                         <option value="120000">$120,000</option>
                     </select>
                 </div>
+                <div class="input-group">
+                    <label for="oteProduct">Product Type</label>
+                    <select id="oteProduct">
+                        <option value="voice">Voice / AI / IOT / SIP</option>
+                        <option value="support">Support / Numbers / MMC</option>
+                        <option value="sms">SMS Messaging</option>
+                    </select>
+                </div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
                 <div style="background: linear-gradient(135deg, var(--telnyx-green-dark) 0%, var(--telnyx-green) 100%); padding: 24px; border-radius: 12px; text-align: center; color: white;">
@@ -1197,7 +1205,7 @@
         function updateOTESummary() {
             const oteSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
             const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
-            const rampProductType = document.getElementById('rampProduct').value;
+            const rampProductType = document.getElementById('oteProduct').value;
             const rampMode = document.getElementById('rampMode').value;
             const noCreditLimit = document.getElementById('noCreditLimit').checked;
             const highMMC = document.getElementById('highMMC').checked;
@@ -1244,10 +1252,19 @@
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
         document.getElementById('oteSalary').addEventListener('change', updateOTESummary);
+        // Sync product type between OTE and Month-by-Month
+        document.getElementById('oteProduct').addEventListener('change', function() {
+            document.getElementById('rampProduct').value = this.value;
+            updateRampTable();
+            updateOTESummary();
+        });
+        document.getElementById('rampProduct').addEventListener('change', function() {
+            document.getElementById('oteProduct').value = this.value;
+            updateOTESummary();
+        });
         // Also update OTE when ramp settings change
         document.getElementById('rampMode').addEventListener('change', updateOTESummary);
         document.getElementById('rampNetNew').addEventListener('input', updateOTESummary);
-        document.getElementById('rampProduct').addEventListener('change', updateOTESummary);
         document.getElementById('noCreditLimit').addEventListener('change', updateOTESummary);
         document.getElementById('highMMC').addEventListener('change', updateOTESummary);
         updateCalculator();
