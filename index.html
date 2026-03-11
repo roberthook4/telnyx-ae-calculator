@@ -464,11 +464,11 @@
             <div class="input-row" style="margin-bottom: 16px;">
                 <div class="input-group" style="flex-direction: row; gap: 24px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="noCreditLimit" checked style="width: 18px; height: 18px; cursor: pointer;">
+                        <input type="checkbox" id="noCreditLimit" style="width: 18px; height: 18px; cursor: pointer;">
                         <span>No Credit Limit (+2%)</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="highMMC" checked style="width: 18px; height: 18px; cursor: pointer;">
+                        <input type="checkbox" id="highMMC" style="width: 18px; height: 18px; cursor: pointer;">
                         <span>High MMC >$7.5k (+5%)</span>
                     </label>
                 </div>
@@ -782,6 +782,8 @@
             const rates = RATES[rampProductType];
             
             const isYear1 = rampYear === 1;
+            const isYear2 = rampYear === 2;
+            const isYear3 = rampYear === 3;
             const noCreditLimit = document.getElementById('noCreditLimit').checked;
             const highMMC = document.getElementById('highMMC').checked;
             
@@ -793,6 +795,8 @@
             
             // Monthly GP Quota based on user input
             const monthlyGPQuota = netNewQuota * GROSS_MARGIN;
+            // Fully ramped GP quota (used for Y2 accelerator)
+            const fullyRampedGPQuota = (netNewQuota * 12) * GROSS_MARGIN;
             
             // Update GP quota display
             document.getElementById('gpQuotaDisplay').textContent = formatCurrency(monthlyGPQuota);
@@ -806,8 +810,11 @@
                 if (highMMC) bonusText += ' + 5% high MMC';
                 rateInfo.innerHTML = `<strong>Year 1 Rate:</strong> ${ratePercent}% (${bonusText}) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)`;
                 rateInfo.style.background = 'var(--telnyx-green-light)';
+            } else if (isYear2) {
+                rateInfo.innerHTML = `<strong>Year 2 Rate:</strong> ${ratePercent}% (reduced rate) &nbsp;|&nbsp; <strong>Accelerator:</strong> 10% of GP above ${formatCurrency(fullyRampedGPQuota)} quota`;
+                rateInfo.style.background = '#FEF3C7';
             } else {
-                rateInfo.innerHTML = `<strong>Year ${rampYear} Rate:</strong> ${ratePercent}% (reduced rate) &nbsp;|&nbsp; <strong>Seasoning:</strong> None &nbsp;|&nbsp; <strong>Accelerator:</strong> 10% of incremental GP above quota`;
+                rateInfo.innerHTML = `<strong>Year 3 Rate:</strong> ${ratePercent}% (reduced rate) &nbsp;|&nbsp; <strong>Accelerator:</strong> 10% of incremental 12-mo rolling GP above quota`;
                 rateInfo.style.background = '#FEF3C7';
             }
             
@@ -815,8 +822,10 @@
             const rampNote = document.getElementById('rampNote');
             if (isYear1) {
                 rampNote.innerHTML = '<strong>Seasoning multipliers</strong> significantly boost Year 1 earnings. The 3x multiplier in months 1-2 means early deals are especially valuable.';
+            } else if (isYear2) {
+                rampNote.innerHTML = `<strong>Accelerator bonus:</strong> You earn 10% of any GP above the fully-ramped quota (${formatCurrency(fullyRampedGPQuota)}/month) each month.`;
             } else {
-                rampNote.innerHTML = `<strong>Accelerator bonus:</strong> Once your 12-month rolling GP exceeds the 12-month rolling quota, you earn 10% of the incremental GP above quota each month.`;
+                rampNote.innerHTML = `<strong>Accelerator bonus:</strong> Based on 12-month rolling GP. You earn 10% of incremental GP above the rolling quota each month.`;
             }
             
             // Show/hide seasoning column header
@@ -859,12 +868,11 @@
             let totalAccel = 0;
             let prevBook = rampYear === 1 ? 0 : (rampYear === 2 ? fullyRamped : fullyRamped * 2);
             
-            // For rolling GP calculation, we need to track GP history
-            // We'll simulate the full history up to the current year
+            // For Y3 rolling GP calculation, we need to track GP history from Y1 and Y2
             let gpHistory = [];
             
-            // For Y2 and Y3, we need prior year GP history
-            if (rampYear >= 2) {
+            // For Y3, we need prior year GP history for rolling calculation
+            if (isYear3) {
                 // Add Year 1 GP to history
                 for (let m = 1; m <= 12; m++) {
                     let y1Book;
@@ -875,11 +883,7 @@
                     }
                     gpHistory.push(y1Book * GROSS_MARGIN);
                 }
-            }
-            
-            if (rampYear >= 3) {
                 // Add Year 2 GP to history
-                let y2PrevBook = fullyRamped;
                 for (let m = 1; m <= 12; m++) {
                     let y2Book;
                     if (rampMode === 'quota') {
@@ -888,15 +892,14 @@
                         y2Book = Math.round(REALISTIC_RAMP_Y2_BASE[m - 1] * scaleFactor);
                     }
                     gpHistory.push(y2Book * GROSS_MARGIN);
-                    y2PrevBook = y2Book;
                 }
             }
             
-            // Track GP above quota for accelerator calculation
+            // Track GP above quota for Y3 rolling accelerator
             let prevGPAboveQuota = 0;
             
-            // Calculate starting GP above quota from prior history
-            if (rampYear >= 2 && gpHistory.length >= 12) {
+            // Calculate starting GP above quota for Y3
+            if (isYear3 && gpHistory.length >= 12) {
                 const priorRollingGP = gpHistory.slice(-12).reduce((a, b) => a + b, 0);
                 const priorRollingQuota = monthlyGPQuota * 12;
                 prevGPAboveQuota = Math.max(0, priorRollingGP - priorRollingQuota);
@@ -924,19 +927,32 @@
                 
                 const gp = totalBook * GROSS_MARGIN;
                 
-                // Add this month's GP to history
-                gpHistory.push(gp);
+                // For Y3, add this month's GP to history for rolling calculation
+                if (isYear3) {
+                    gpHistory.push(gp);
+                }
                 
-                // Calculate 12-month rolling GP
-                const monthsElapsed = gpHistory.length;
-                const lookbackMonths = Math.min(12, monthsElapsed);
-                const rollingGP = gpHistory.slice(-lookbackMonths).reduce((a, b) => a + b, 0);
+                // Calculate 12-month rolling GP (only used for Y3)
+                let rollingGP = 0;
+                let gpAboveQuota = 0;
+                let accelerator = 0;
                 
-                // Calculate 12-month rolling quota (capped at 12 months)
-                const rollingQuota = monthlyGPQuota * lookbackMonths;
-                
-                // GP above quota
-                const gpAboveQuota = Math.max(0, rollingGP - rollingQuota);
+                if (isYear3) {
+                    // Y3: Rolling 12-month accelerator
+                    const lookbackMonths = Math.min(12, gpHistory.length);
+                    rollingGP = gpHistory.slice(-lookbackMonths).reduce((a, b) => a + b, 0);
+                    const rollingQuota = monthlyGPQuota * 12;
+                    gpAboveQuota = Math.max(0, rollingGP - rollingQuota);
+                    const incrementalGPAboveQuota = gpAboveQuota - prevGPAboveQuota;
+                    accelerator = incrementalGPAboveQuota > 0 ? incrementalGPAboveQuota * ACCELERATOR_RATE : 0;
+                    prevGPAboveQuota = gpAboveQuota;
+                } else if (isYear2) {
+                    // Y2: Simple accelerator (GP - fully ramped quota)
+                    rollingGP = gp * 12; // Show annualized for context
+                    gpAboveQuota = Math.max(0, gp - fullyRampedGPQuota);
+                    accelerator = gpAboveQuota * ACCELERATOR_RATE;
+                }
+                // Y1: No accelerator
                 
                 // Calculate base commission
                 let baseComm = gp * effectiveRate;
@@ -954,11 +970,6 @@
                     seasonedComm = baseComm + cappedUplift;
                 }
                 
-                // Calculate accelerator (incremental GP above quota)
-                const incrementalGPAboveQuota = gpAboveQuota - prevGPAboveQuota;
-                const accelerator = incrementalGPAboveQuota > 0 ? incrementalGPAboveQuota * ACCELERATOR_RATE : 0;
-                prevGPAboveQuota = gpAboveQuota;
-                
                 // Total commission = seasoned commission + accelerator
                 const commission = seasonedComm + accelerator;
                 
@@ -971,6 +982,9 @@
                 
                 const highlightClass = (isYear1 && multiplier > 1) || accelerator > 0 ? 'style="background: rgba(0, 195, 137, 0.08);"' : '';
                 
+                // Display rolling GP differently for Y2 vs Y3
+                const rollingDisplay = isYear3 ? formatCurrency(rollingGP) : (isYear2 ? formatCurrency(gp * 12) + '*' : '—');
+                
                 tableHTML += `
                     <tr ${highlightClass}>
                         <td>M${month}</td>
@@ -979,7 +993,7 @@
                         <td>${formatCurrency(gp)}</td>
                         <td style="color: ${multiplier > 1 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${multiplier > 1 ? '600' : 'normal'};">${multiplierLabel}</td>
                         <td>${formatCurrency(seasonedComm)}</td>
-                        <td>${formatCurrency(rollingGP)}</td>
+                        <td>${rollingDisplay}</td>
                         <td>${gpAboveQuota > 0 ? formatCurrency(gpAboveQuota) : '—'}</td>
                         <td style="color: ${accelerator > 0 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${accelerator > 0 ? '600' : 'normal'};">${accelerator > 0 ? formatCurrency(accelerator) : '—'}</td>
                         <td>${formatCurrency(commission)}</td>
