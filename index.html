@@ -829,12 +829,10 @@
                 const monthlyRevenue = MONTHLY_REVENUE_QUOTA * scenario.pct;
                 const monthlyGP = monthlyRevenue * GROSS_MARGIN;
                 
-                // Y1: Use realistic ramp with seasoning + bonuses
+                // Y1/Y2/Y3: Use realistic ramp (continued growth each year)
                 const y1Commission = calculateYearCommission(1, 5000 * scenario.pct, productType, 'realistic', noCreditLimit, highMMC);
-                
-                // Y2/Y3: Steady-state with accelerator (no bonuses in Y2+)
-                const y2Commission = calculateYear2Commission(monthlyGP, rates.y2);
-                const y3Commission = y2Commission;
+                const y2Commission = calculateYearCommission(2, 5000 * scenario.pct, productType, 'realistic', noCreditLimit, highMMC);
+                const y3Commission = calculateYearCommission(3, 5000 * scenario.pct, productType, 'realistic', noCreditLimit, highMMC);
                 
                 const y1Total = baseSalary + y1Commission;
                 const y2Total = baseSalary + y2Commission;
