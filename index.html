@@ -447,6 +447,9 @@
                         <span class="prefix">$</span>
                         <input type="number" id="rampNetNew" value="5000" min="1000" max="50000" step="1000">
                     </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                        = <strong id="netNewARR">$60k</strong> ARR per month in new deals
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="rampProduct">Product Type</label>
@@ -800,11 +803,13 @@
             }
             
             // Update displays
+            const netNewARR = netNewQuota * 12; // Each month's net new MRR = this much ARR
             const fullyRamped = netNewQuota * 12;
-            const arr = fullyRamped * 12;
+            const totalARR = fullyRamped * 12;
             document.getElementById('netNewDisplay').textContent = formatCurrency(netNewQuota);
+            document.getElementById('netNewARR').textContent = '$' + Math.round(netNewARR / 1000) + 'k';
             document.getElementById('fullyRampedDisplay').textContent = formatCurrency(fullyRamped);
-            document.getElementById('arrDisplay').textContent = '$' + Math.round(arr / 1000) + 'k';
+            document.getElementById('arrDisplay').textContent = '$' + Math.round(totalARR / 1000) + 'k';
             
             const REALISTIC_RAMP_BASE = isYear1 ? REALISTIC_RAMP_Y1_BASE : REALISTIC_RAMP_Y2_BASE;
             const baseFullyRamped = 60000; // The base values assume $60k fully ramped
