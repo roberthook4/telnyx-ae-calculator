@@ -506,6 +506,8 @@
                             <th>Accelerator</th>
                             <th>Total Comm</th>
                             <th>Cumulative</th>
+                            <th>Base Salary</th>
+                            <th style="background: var(--telnyx-green-dark); color: white;">Total Comp</th>
                         </tr>
                     </thead>
                     <tbody id="rampTable">
@@ -524,16 +526,8 @@
                             <td id="rampTotalAccel">—</td>
                             <td id="rampTotalComm">$117,181</td>
                             <td>—</td>
-                        </tr>
-                        <tr style="background: var(--bg-primary);">
-                            <td colspan="10" style="text-align: right;">Base Salary:</td>
                             <td id="rampBaseSalary">$85,000</td>
-                            <td>—</td>
-                        </tr>
-                        <tr style="background: var(--telnyx-navy); color: white;">
-                            <td colspan="10" style="text-align: right;">Total Compensation (Base + Commission):</td>
-                            <td id="rampTotalComp" style="color: var(--telnyx-green);">$202,181</td>
-                            <td>—</td>
+                            <td id="rampTotalComp" style="background: var(--telnyx-green-dark); color: white;">$202,181</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -845,6 +839,7 @@
             const rampMode = document.getElementById('rampMode').value;
             const rampYear = parseInt(document.getElementById('rampYear').value);
             const rates = RATES[rampProductType];
+            const rampBaseSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
             
             const isYear1 = rampYear === 1;
             const isYear2 = rampYear === 2;
@@ -1052,6 +1047,9 @@
                 // Display rolling GP differently for Y2 vs Y3
                 const rollingDisplay = isYear3 ? formatCurrency(rollingGP) : (isYear2 ? formatCurrency(gp * 12) + '*' : '—');
                 
+                const monthlyBase = rampBaseSalary / 12;
+                const monthlyTotalComp = monthlyBase + commission;
+                
                 tableHTML += `
                     <tr ${highlightClass}>
                         <td>M${month}</td>
@@ -1066,6 +1064,8 @@
                         <td style="color: ${accelerator > 0 ? 'var(--telnyx-green)' : 'inherit'}; font-weight: ${accelerator > 0 ? '600' : 'normal'};">${accelerator > 0 ? formatCurrency(accelerator) : '—'}</td>
                         <td>${formatCurrency(commission)}</td>
                         <td>${formatCurrency(cumulativeComm)}</td>
+                        <td>${formatCurrency(monthlyBase)}</td>
+                        <td style="background: rgba(0, 195, 137, 0.1); font-weight: 600;">${formatCurrency(monthlyTotalComp)}</td>
                     </tr>
                 `;
             }
