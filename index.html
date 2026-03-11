@@ -82,20 +82,20 @@
         .input-row {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 24px;
             flex-wrap: wrap;
         }
         
         .input-group {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 6px;
         }
         
         .input-group label {
             font-weight: 500;
-            color: var(--text-primary);
-            white-space: nowrap;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
         
         .input-with-prefix {
@@ -131,6 +131,36 @@
             outline: none;
         }
         
+        select {
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 200px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--telnyx-green);
+        }
+        
+        .rate-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--telnyx-green-light);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .rate-display strong {
+            color: var(--telnyx-green-dark);
+        }
+        
         .summary-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -141,6 +171,10 @@
         @media (max-width: 768px) {
             .summary-cards {
                 grid-template-columns: 1fr;
+            }
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
         
@@ -301,6 +335,20 @@
                         <input type="number" id="baseSalary" value="85000" min="50000" max="150000" step="5000">
                     </div>
                 </div>
+                <div class="input-group">
+                    <label for="productType">Product Type</label>
+                    <select id="productType">
+                        <option value="voice">Voice / AI / IOT / SIP (Highest)</option>
+                        <option value="support">Support / Numbers / MMC (Mid)</option>
+                        <option value="sms">SMS Messaging (Lower)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Commission Rate</label>
+                    <div class="rate-display">
+                        Y1: <strong id="y1RateDisplay">30%</strong> &nbsp;|&nbsp; Y2: <strong id="y2RateDisplay">15%</strong>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -324,8 +372,8 @@
 
         <div class="card">
             <h2>💰 Compensation by Performance Level</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
-                Based on Voice/AI/IOT products (highest commission tier), contracted deals, 67% gross margin.
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;" id="tableDescription">
+                Based on Voice/AI/IOT products, contracted deals, 67% gross margin.
             </p>
             <div style="overflow-x: auto;">
                 <table>
@@ -345,37 +393,47 @@
                 </table>
             </div>
             <div class="note">
-                <strong>Year 1 is where you maximize earnings.</strong> Seasoning multipliers (up to 3x) and higher rates create significant upside. Voice/AI/IOT pays ~2.4x more than SMS for the same GP.
+                <strong>Year 1 is where you maximize earnings.</strong> Seasoning multipliers (up to 3x) and higher rates create significant upside.
             </div>
         </div>
 
         <div class="card">
-            <h2>📈 Key Numbers</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Fully Ramped Target</div>
-                    <div class="info-value">$60k/month</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Annual Run Rate</div>
-                    <div class="info-value">$720k ARR</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Gross Margin</div>
-                    <div class="info-value">67%</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Monthly GP Quota</div>
-                    <div class="info-value">$40,200</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Y1 Commission Rate</div>
-                    <div class="info-value">30-37%</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Quota Accelerator</div>
-                    <div class="info-value">+10% above quota</div>
-                </div>
+            <h2>📈 Commission Rates by Product</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product Type</th>
+                            <th>Y1 Contracted</th>
+                            <th>Y1 Non-Contracted</th>
+                            <th>Y2 Rate</th>
+                            <th>Multiplier vs SMS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Voice / AI / IOT / SIP</td>
+                            <td>30%</td>
+                            <td>20%</td>
+                            <td>15%</td>
+                            <td>3.5x</td>
+                        </tr>
+                        <tr>
+                            <td>Support / Numbers / MMC</td>
+                            <td>17%</td>
+                            <td>12%</td>
+                            <td>10%</td>
+                            <td>2x</td>
+                        </tr>
+                        <tr>
+                            <td>SMS Messaging</td>
+                            <td>8.5%</td>
+                            <td>6%</td>
+                            <td>5%</td>
+                            <td>1x</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -407,6 +465,28 @@
             </div>
         </div>
 
+        <div class="card">
+            <h2>📈 Key Numbers</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Fully Ramped Target</div>
+                    <div class="info-value">$60k/month</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Annual Run Rate</div>
+                    <div class="info-value">$720k ARR</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Gross Margin</div>
+                    <div class="info-value">67%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Quota Accelerator</div>
+                    <div class="info-value">+10% above quota</div>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>This calculator is for illustrative purposes only. Actual compensation may vary.</p>
             <p>© 2025 Telnyx. Internal use only.</p>
@@ -414,20 +494,22 @@
     </div>
 
     <script>
-        // Constants from the comp plan
+        // Constants
         const GROSS_MARGIN = 0.67;
         const MONTHLY_REVENUE_QUOTA = 60000;
-        const MONTHLY_GP_QUOTA = MONTHLY_REVENUE_QUOTA * GROSS_MARGIN; // 40,200
-        const ANNUAL_GP_QUOTA = MONTHLY_GP_QUOTA * 12; // 482,400
-        
-        // Commission rates (Voice/AI/IOT, Contracted with no credit limit)
-        const Y1_BASE_RATE = 0.30;
-        const CONTRACT_BONUS = 0.02; // No credit limit bonus
-        const Y1_EFFECTIVE_RATE = Y1_BASE_RATE + CONTRACT_BONUS; // 0.32
-        const Y2_RATE = 0.15;
+        const MONTHLY_GP_QUOTA = MONTHLY_REVENUE_QUOTA * GROSS_MARGIN;
+        const ANNUAL_GP_QUOTA = MONTHLY_GP_QUOTA * 12;
         const ACCELERATOR_RATE = 0.10;
+        const CONTRACT_BONUS = 0.02;
         
-        // Seasoning multipliers by month
+        // Commission rates by product type
+        const RATES = {
+            voice: { y1: 0.30, y2: 0.15, name: 'Voice/AI/IOT' },
+            support: { y1: 0.17, y2: 0.10, name: 'Support/Numbers/MMC' },
+            sms: { y1: 0.085, y2: 0.05, name: 'SMS Messaging' }
+        };
+        
+        // Seasoning multipliers
         const SEASONING = {
             1: 3.0, 2: 3.0,
             3: 2.5, 4: 2.5, 5: 2.5,
@@ -449,13 +531,18 @@
             return '$' + Math.round(amount).toLocaleString();
         }
         
-        function calculateYear1Commission(monthlyGP) {
+        function getSelectedRates() {
+            const productType = document.getElementById('productType').value;
+            return RATES[productType];
+        }
+        
+        function calculateYear1Commission(monthlyGP, y1Rate) {
             let totalCommission = 0;
+            const effectiveRate = y1Rate + CONTRACT_BONUS;
             
             for (let month = 1; month <= 12; month++) {
-                let baseCommission = monthlyGP * Y1_EFFECTIVE_RATE;
+                let baseCommission = monthlyGP * effectiveRate;
                 
-                // Apply seasoning if applicable
                 if (SEASONING[month]) {
                     let seasonedCommission = baseCommission * SEASONING[month];
                     let uplift = seasonedCommission - baseCommission;
@@ -469,10 +556,9 @@
             return totalCommission;
         }
         
-        function calculateYear2Commission(monthlyGP) {
-            let baseCommission = monthlyGP * Y2_RATE * 12;
+        function calculateYear2Commission(monthlyGP, y2Rate) {
+            let baseCommission = monthlyGP * y2Rate * 12;
             
-            // Add accelerator if above quota
             let annualGP = monthlyGP * 12;
             if (annualGP > ANNUAL_GP_QUOTA) {
                 let gpAboveQuota = annualGP - ANNUAL_GP_QUOTA;
@@ -484,8 +570,13 @@
         
         function updateCalculator() {
             const baseSalary = parseFloat(document.getElementById('baseSalary').value) || 85000;
-            const annualSalary = baseSalary;
-            const threeyearSalary = baseSalary * 3;
+            const rates = getSelectedRates();
+            
+            // Update rate display
+            document.getElementById('y1RateDisplay').textContent = Math.round(rates.y1 * 100) + '%';
+            document.getElementById('y2RateDisplay').textContent = Math.round(rates.y2 * 100) + '%';
+            document.getElementById('tableDescription').textContent = 
+                `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
             
             let tableHTML = '';
             
@@ -493,13 +584,13 @@
                 const monthlyRevenue = MONTHLY_REVENUE_QUOTA * scenario.pct;
                 const monthlyGP = monthlyRevenue * GROSS_MARGIN;
                 
-                const y1Commission = calculateYear1Commission(monthlyGP);
-                const y2Commission = calculateYear2Commission(monthlyGP);
-                const y3Commission = y2Commission; // Same as Y2
+                const y1Commission = calculateYear1Commission(monthlyGP, rates.y1);
+                const y2Commission = calculateYear2Commission(monthlyGP, rates.y2);
+                const y3Commission = y2Commission;
                 
-                const y1Total = annualSalary + y1Commission;
-                const y2Total = annualSalary + y2Commission;
-                const y3Total = annualSalary + y3Commission;
+                const y1Total = baseSalary + y1Commission;
+                const y2Total = baseSalary + y2Commission;
+                const y3Total = baseSalary + y3Commission;
                 const threeYearTotal = y1Total + y2Total + y3Total;
                 
                 const rowClass = scenario.highlight ? 'highlight-row' : '';
@@ -516,7 +607,6 @@
                     </tr>
                 `;
                 
-                // Update summary cards
                 if (scenario.pct === 1.0) {
                     document.getElementById('atQuotaTotal').textContent = formatCurrency(y1Total);
                 } else if (scenario.pct === 1.5) {
@@ -531,8 +621,8 @@
         
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
+        document.getElementById('productType').addEventListener('change', updateCalculator);
         updateCalculator();
     </script>
 </body>
 </html>
-<!-- rebuild Wed Mar 11 08:18:46 MDT 2026 -->
