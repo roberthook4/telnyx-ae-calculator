@@ -536,6 +536,61 @@
             </div>
         </div>
 
+        <div class="card">
+            <h2>📊 Monthly Take-Home (At Quota)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                What you'd earn each month at 100% quota achievement. Base salary + commission.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div>
+                    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-green-dark);">Year 1</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Base</th>
+                                <th>Commission</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyY1Table">
+                        </tbody>
+                        <tfoot style="background: var(--telnyx-green-light); font-weight: 600;">
+                            <tr>
+                                <td>Year 1</td>
+                                <td id="monthlyY1BaseTot">$0</td>
+                                <td id="monthlyY1CommTot">$0</td>
+                                <td id="monthlyY1Total">$0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-navy);">Year 2</h3>
+                    <table style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Base</th>
+                                <th>Commission</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyY2Table">
+                        </tbody>
+                        <tfoot style="background: var(--bg-primary); font-weight: 600;">
+                            <tr>
+                                <td>Year 2</td>
+                                <td id="monthlyY2BaseTot">$0</td>
+                                <td id="monthlyY2CommTot">$0</td>
+                                <td id="monthlyY2Total">$0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="card" style="background: linear-gradient(135deg, #FAFBFC 0%, var(--telnyx-green-light) 100%); border: 2px solid var(--telnyx-green);">
             <h2 style="color: var(--telnyx-green-dark); border-bottom-color: var(--telnyx-green);">💵 Example Deal Calculator</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
@@ -1236,9 +1291,82 @@
             document.getElementById('ote3YearTotal').textContent = formatCurrency(threeYearTotal);
         }
         
+        // Monthly Take-Home Calculator (at quota)
+        function updateMonthlyTakeHome() {
+            const annualSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
+            const monthlySalary = annualSalary / 12;
+            const productType = document.getElementById('oteProduct').value;
+            const noCreditLimit = document.getElementById('noCreditLimit').checked;
+            const highMMC = document.getElementById('highMMC').checked;
+            
+            const rates = RATES[productType];
+            let bonuses = 0;
+            if (noCreditLimit) bonuses += 0.02;
+            if (highMMC) bonuses += 0.05;
+            const y1Rate = rates.y1 + bonuses;
+            const y2Rate = rates.y2;
+            
+            // At quota: $5k net new per month, building to $60k book
+            const netNewQuota = 5000;
+            const fullyRampedGP = 60000 * GROSS_MARGIN; // $40,200
+            
+            let y1Html = '';
+            let y1TotalComm = 0;
+            
+            // Year 1: ramp with seasoning
+            for (let m = 1; m <= 12; m++) {
+                const book = netNewQuota * m;
+                const gp = book * GROSS_MARGIN;
+                let comm = gp * y1Rate;
+                
+                // Apply seasoning
+                const multiplier = SEASONING[m] || 1.0;
+                if (multiplier > 1) {
+                    const uplift = (comm * multiplier) - comm;
+                    comm = comm + Math.min(uplift, SEASONING_CAP);
+                }
+                
+                y1TotalComm += comm;
+                const monthTotal = monthlySalary + comm;
+                
+                y1Html += '<tr><td>M' + m + '</td><td>' + formatCurrency(monthlySalary) + '</td><td>' + formatCurrency(comm) + '</td><td>' + formatCurrency(monthTotal) + '</td></tr>';
+            }
+            
+            document.getElementById('monthlyY1Table').innerHTML = y1Html;
+            document.getElementById('monthlyY1BaseTot').textContent = formatCurrency(annualSalary);
+            document.getElementById('monthlyY1CommTot').textContent = formatCurrency(y1TotalComm);
+            document.getElementById('monthlyY1Total').textContent = formatCurrency(annualSalary + y1TotalComm);
+            
+            // Year 2: steady state at full book + accelerator potential
+            let y2Html = '';
+            let y2TotalComm = 0;
+            
+            for (let m = 1; m <= 12; m++) {
+                // Y2 at quota: maintaining $60k book
+                const gp = fullyRampedGP;
+                const comm = gp * y2Rate;
+                
+                y2TotalComm += comm;
+                const monthTotal = monthlySalary + comm;
+                
+                y2Html += '<tr><td>M' + m + '</td><td>' + formatCurrency(monthlySalary) + '</td><td>' + formatCurrency(comm) + '</td><td>' + formatCurrency(monthTotal) + '</td></tr>';
+            }
+            
+            document.getElementById('monthlyY2Table').innerHTML = y2Html;
+            document.getElementById('monthlyY2BaseTot').textContent = formatCurrency(annualSalary);
+            document.getElementById('monthlyY2CommTot').textContent = formatCurrency(y2TotalComm);
+            document.getElementById('monthlyY2Total').textContent = formatCurrency(annualSalary + y2TotalComm);
+        }
+        
         // Initialize
-        document.getElementById('oteSalary').addEventListener('change', updateCalculator);
-        document.getElementById('oteProduct').addEventListener('change', updateCalculator);
+        document.getElementById('oteSalary').addEventListener('change', function() {
+            updateCalculator();
+            updateMonthlyTakeHome();
+        });
+        document.getElementById('oteProduct').addEventListener('change', function() {
+            updateCalculator();
+            updateMonthlyTakeHome();
+        });
         document.getElementById('rampYear').addEventListener('change', updateRampTable);
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
@@ -1252,6 +1380,7 @@
             updateRampTable();
             updateCalculator();
             updateOTESummary();
+            updateMonthlyTakeHome();
         }
         document.getElementById('noCreditLimit').addEventListener('change', function() { syncNoCreditLimit(this); });
         document.getElementById('oteNoCreditLimit').addEventListener('change', function() { syncNoCreditLimit(this); });
@@ -1266,6 +1395,7 @@
             updateRampTable();
             updateCalculator();
             updateOTESummary();
+            updateMonthlyTakeHome();
         }
         document.getElementById('highMMC').addEventListener('change', function() { syncHighMMC(this); });
         document.getElementById('oteHighMMC').addEventListener('change', function() { syncHighMMC(this); });
@@ -1291,6 +1421,7 @@
         updateRampTable();
         updateDealCalculator();
         updateOTESummary();
+        updateMonthlyTakeHome();
     </script>
 </body>
 </html>
