@@ -581,9 +581,9 @@
         </div>
 
         <div class="card">
-            <h2>💰 Compensation by Performance Level</h2>
+            <h2>💰 Compensation by Performance Level (Steady State)</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;" id="tableDescription">
-                Based on Voice/AI/IOT products, contracted deals, 67% gross margin.
+                Based on Voice/AI/IOT products, contracted deals, 67% gross margin. <strong>No seasoning applied</strong> — shows earnings once fully ramped.
             </p>
             <div style="overflow-x: auto;">
                 <table>
@@ -603,7 +603,34 @@
                 </table>
             </div>
             <div class="note">
-                <strong>Year 1 is where you maximize earnings.</strong> Seasoning multipliers (up to 3x) and higher rates create significant upside.
+                <strong>Steady state earnings</strong> — what you'd earn once fully ramped at each performance level, no seasoning boost.
+            </div>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #FAFBFC 0%, var(--telnyx-green-light) 100%); border: 2px solid var(--telnyx-green);">
+            <h2 style="color: var(--telnyx-green-dark);">💰 Compensation by Performance Level (With Ramp)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                Based on Voice/AI/IOT products, contracted deals, 67% gross margin. <strong>Includes seasoning</strong> — realistic Year 1 with ramp multipliers.
+            </p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Performance</th>
+                            <th>Monthly Revenue</th>
+                            <th>% of Quota</th>
+                            <th>Y1 Commission</th>
+                            <th>Y1 Total Comp</th>
+                            <th>Y2 Total Comp</th>
+                            <th>3-Year Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scenarioTableWithRamp">
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>Year 1 includes seasoning boost</strong> — 3x months 1-2, 2.5x months 3-5, 2x months 6-9 (capped at $10k/mo uplift).
             </div>
         </div>
 
@@ -754,14 +781,14 @@
             return RATES[productType];
         }
         
-        function calculateYear1Commission(monthlyGP, y1Rate) {
+        function calculateYear1Commission(monthlyGP, y1Rate, applySeasoning = true) {
             let totalCommission = 0;
             const effectiveRate = y1Rate + CONTRACT_BONUS;
             
             for (let month = 1; month <= 12; month++) {
                 let baseCommission = monthlyGP * effectiveRate;
                 
-                if (SEASONING[month]) {
+                if (applySeasoning && SEASONING[month]) {
                     let seasonedCommission = baseCommission * SEASONING[month];
                     let uplift = seasonedCommission - baseCommission;
                     let cappedUplift = Math.min(uplift, SEASONING_CAP);
@@ -794,47 +821,70 @@
             document.getElementById('y1RateDisplay').textContent = Math.round(rates.y1 * 100) + '%';
             document.getElementById('y2RateDisplay').textContent = Math.round(rates.y2 * 100) + '%';
             document.getElementById('tableDescription').textContent = 
-                `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
+                `Based on ${rates.name} products, contracted deals, 67% gross margin. No seasoning applied — shows earnings once fully ramped.`;
             
             let tableHTML = '';
+            let tableHTMLWithRamp = '';
             
             SCENARIOS.forEach(scenario => {
                 const monthlyRevenue = MONTHLY_REVENUE_QUOTA * scenario.pct;
                 const monthlyGP = monthlyRevenue * GROSS_MARGIN;
                 
-                const y1Commission = calculateYear1Commission(monthlyGP, rates.y1);
+                // Steady state (no seasoning)
+                const y1CommissionNoSeasoning = calculateYear1Commission(monthlyGP, rates.y1, false);
                 const y2Commission = calculateYear2Commission(monthlyGP, rates.y2);
                 const y3Commission = y2Commission;
                 
-                const y1Total = baseSalary + y1Commission;
+                const y1TotalNoSeasoning = baseSalary + y1CommissionNoSeasoning;
                 const y2Total = baseSalary + y2Commission;
                 const y3Total = baseSalary + y3Commission;
-                const threeYearTotal = y1Total + y2Total + y3Total;
+                const threeYearTotalNoSeasoning = y1TotalNoSeasoning + y2Total + y3Total;
+                
+                // With seasoning
+                const y1CommissionWithSeasoning = calculateYear1Commission(monthlyGP, rates.y1, true);
+                const y1TotalWithSeasoning = baseSalary + y1CommissionWithSeasoning;
+                const threeYearTotalWithSeasoning = y1TotalWithSeasoning + y2Total + y3Total;
                 
                 const rowClass = scenario.highlight ? 'highlight-row' : '';
                 
+                // Steady state table (no seasoning)
                 tableHTML += `
                     <tr class="${rowClass}">
                         <td>${scenario.name} (${Math.round(scenario.pct * 100)}%)</td>
                         <td>${formatCurrency(monthlyRevenue)}</td>
                         <td>${Math.round(scenario.pct * 100)}%</td>
-                        <td>${formatCurrency(y1Commission)}</td>
-                        <td>${formatCurrency(y1Total)}</td>
+                        <td>${formatCurrency(y1CommissionNoSeasoning)}</td>
+                        <td>${formatCurrency(y1TotalNoSeasoning)}</td>
                         <td>${formatCurrency(y2Total)}</td>
-                        <td>${formatCurrency(threeYearTotal)}</td>
+                        <td>${formatCurrency(threeYearTotalNoSeasoning)}</td>
                     </tr>
                 `;
                 
+                // With ramp/seasoning table
+                tableHTMLWithRamp += `
+                    <tr class="${rowClass}">
+                        <td>${scenario.name} (${Math.round(scenario.pct * 100)}%)</td>
+                        <td>${formatCurrency(monthlyRevenue)}</td>
+                        <td>${Math.round(scenario.pct * 100)}%</td>
+                        <td>${formatCurrency(y1CommissionWithSeasoning)}</td>
+                        <td>${formatCurrency(y1TotalWithSeasoning)}</td>
+                        <td>${formatCurrency(y2Total)}</td>
+                        <td>${formatCurrency(threeYearTotalWithSeasoning)}</td>
+                    </tr>
+                `;
+                
+                // Summary cards use steady state (more realistic for ongoing comp)
                 if (scenario.pct === 1.0) {
-                    document.getElementById('atQuotaTotal').textContent = formatCurrency(y1Total);
+                    document.getElementById('atQuotaTotal').textContent = formatCurrency(y1TotalNoSeasoning);
                 } else if (scenario.pct === 1.5) {
-                    document.getElementById('strongTotal').textContent = formatCurrency(y1Total);
+                    document.getElementById('strongTotal').textContent = formatCurrency(y1TotalNoSeasoning);
                 } else if (scenario.pct === 2.0) {
-                    document.getElementById('topTotal').textContent = formatCurrency(y1Total);
+                    document.getElementById('topTotal').textContent = formatCurrency(y1TotalNoSeasoning);
                 }
             });
             
             document.getElementById('scenarioTable').innerHTML = tableHTML;
+            document.getElementById('scenarioTableWithRamp').innerHTML = tableHTMLWithRamp;
         }
         
         function updateRampTable() {
