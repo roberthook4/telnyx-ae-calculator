@@ -519,6 +519,59 @@
             </div>
         </div>
 
+        <div class="card" style="background: linear-gradient(135deg, #FAFBFC 0%, #E8F4FD 100%); border: 2px solid var(--telnyx-navy);">
+            <h2 style="color: var(--telnyx-navy); border-bottom-color: var(--telnyx-navy);">💼 Total Compensation Summary</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                Full OTE breakdown based on settings above. Adjust base salary to see total package.
+            </p>
+            <div class="input-row" style="margin-bottom: 20px;">
+                <div class="input-group">
+                    <label for="oteSalary">Base Salary</label>
+                    <select id="oteSalary">
+                        <option value="70000">$70,000</option>
+                        <option value="75000">$75,000</option>
+                        <option value="80000">$80,000</option>
+                        <option value="85000" selected>$85,000</option>
+                        <option value="90000">$90,000</option>
+                        <option value="95000">$95,000</option>
+                        <option value="100000">$100,000</option>
+                        <option value="110000">$110,000</option>
+                        <option value="120000">$120,000</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, var(--telnyx-green-dark) 0%, var(--telnyx-green) 100%); padding: 24px; border-radius: 12px; text-align: center; color: white;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 4px;">Year 1 Total Comp</div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="oteY1Total">$0</div>
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 8px;">
+                        <span id="oteY1Salary">$85k</span> base + <span id="oteY1Comm">$0</span> commission
+                    </div>
+                    <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;" id="oteY1Monthly">~$0/mo</div>
+                </div>
+                <div style="background: linear-gradient(135deg, var(--telnyx-navy) 0%, #1a3a5c 100%); padding: 24px; border-radius: 12px; text-align: center; color: white;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 4px;">Year 2 Total Comp</div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="oteY2Total">$0</div>
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 8px;">
+                        <span id="oteY2Salary">$85k</span> base + <span id="oteY2Comm">$0</span> commission
+                    </div>
+                    <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;" id="oteY2Monthly">~$0/mo</div>
+                </div>
+                <div style="background: linear-gradient(135deg, var(--telnyx-navy) 0%, #1a3a5c 100%); padding: 24px; border-radius: 12px; text-align: center; color: white;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.8; margin-bottom: 4px;">Year 3 Total Comp</div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="oteY3Total">$0</div>
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 8px;">
+                        <span id="oteY3Salary">$85k</span> base + <span id="oteY3Comm">$0</span> commission
+                    </div>
+                    <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 4px;" id="oteY3Monthly">~$0/mo</div>
+                </div>
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">3-Year Total Earnings</div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--telnyx-green-dark);" id="ote3YearTotal">$0</div>
+            </div>
+        </div>
+
         <div class="card">
             <h2>💰 Compensation by Performance Level</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;" id="tableDescription">
@@ -1058,6 +1111,126 @@
             document.getElementById('dealExamplePayout').textContent = formatCurrency(y1Total);
         }
         
+        // OTE Summary Calculator - uses same settings as Month-by-Month
+        function calculateYearCommission(year, netNewQuota, rampProductType, rampMode, noCreditLimit, highMMC) {
+            const rates = RATES[rampProductType];
+            const fullyRamped = netNewQuota * 12;
+            const scaleFactor = fullyRamped / 60000;
+            const monthlyGPQuota = netNewQuota * GROSS_MARGIN;
+            const fullyRampedGPQuota = fullyRamped * GROSS_MARGIN;
+            
+            let bonuses = 0;
+            if (noCreditLimit) bonuses += 0.02;
+            if (highMMC) bonuses += 0.05;
+            
+            const isYear1 = year === 1;
+            const effectiveRate = isYear1 ? (rates.y1 + bonuses) : rates.y2;
+            
+            let RAMP_BASE;
+            if (year === 1) RAMP_BASE = REALISTIC_RAMP_Y1_BASE;
+            else if (year === 2) RAMP_BASE = REALISTIC_RAMP_Y2_BASE;
+            else RAMP_BASE = REALISTIC_RAMP_Y3_BASE;
+            
+            let totalComm = 0;
+            let prevBook = year === 1 ? 0 : (year === 2 ? fullyRamped : fullyRamped * 2);
+            let gpHistory = [];
+            
+            // Build GP history for Y3
+            if (year === 3) {
+                for (let m = 1; m <= 12; m++) {
+                    let y1Book = rampMode === 'quota' ? netNewQuota * m : Math.round(REALISTIC_RAMP_Y1_BASE[m - 1] * scaleFactor);
+                    gpHistory.push(y1Book * GROSS_MARGIN);
+                }
+                for (let m = 1; m <= 12; m++) {
+                    let y2Book = rampMode === 'quota' ? fullyRamped + (netNewQuota * m) : Math.round(REALISTIC_RAMP_Y2_BASE[m - 1] * scaleFactor);
+                    gpHistory.push(y2Book * GROSS_MARGIN);
+                }
+            }
+            
+            let prevGPAboveQuota = 0;
+            if (year === 3 && gpHistory.length >= 12) {
+                const priorRollingGP = gpHistory.slice(-12).reduce((a, b) => a + b, 0);
+                prevGPAboveQuota = Math.max(0, priorRollingGP - monthlyGPQuota * 12);
+            }
+            
+            for (let month = 1; month <= 12; month++) {
+                let totalBook;
+                if (rampMode === 'quota') {
+                    if (year === 1) totalBook = netNewQuota * month;
+                    else if (year === 2) totalBook = fullyRamped + (netNewQuota * month);
+                    else totalBook = (fullyRamped * 2) + (netNewQuota * month / 12 * 2.5);
+                } else {
+                    totalBook = Math.round(RAMP_BASE[month - 1] * scaleFactor);
+                }
+                prevBook = totalBook;
+                
+                const gp = totalBook * GROSS_MARGIN;
+                if (year === 3) gpHistory.push(gp);
+                
+                let accelerator = 0;
+                if (year === 3) {
+                    const rollingGP = gpHistory.slice(-12).reduce((a, b) => a + b, 0);
+                    const gpAboveQuota = Math.max(0, rollingGP - monthlyGPQuota * 12);
+                    const incrementalGP = gpAboveQuota - prevGPAboveQuota;
+                    accelerator = incrementalGP > 0 ? incrementalGP * ACCELERATOR_RATE : 0;
+                    prevGPAboveQuota = gpAboveQuota;
+                } else if (year === 2) {
+                    const gpAboveQuota = Math.max(0, gp - fullyRampedGPQuota);
+                    accelerator = gpAboveQuota * ACCELERATOR_RATE;
+                }
+                
+                let baseComm = gp * effectiveRate;
+                const multiplier = isYear1 ? (SEASONING[month] || 1.0) : 1.0;
+                
+                let seasonedComm = baseComm;
+                if (isYear1 && multiplier > 1) {
+                    const uplift = (baseComm * multiplier) - baseComm;
+                    seasonedComm = baseComm + Math.min(uplift, SEASONING_CAP);
+                }
+                
+                totalComm += seasonedComm + accelerator;
+            }
+            
+            return totalComm;
+        }
+        
+        function updateOTESummary() {
+            const oteSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
+            const netNewQuota = parseFloat(document.getElementById('rampNetNew').value) || 5000;
+            const rampProductType = document.getElementById('rampProduct').value;
+            const rampMode = document.getElementById('rampMode').value;
+            const noCreditLimit = document.getElementById('noCreditLimit').checked;
+            const highMMC = document.getElementById('highMMC').checked;
+            
+            const y1Comm = calculateYearCommission(1, netNewQuota, rampProductType, rampMode, noCreditLimit, highMMC);
+            const y2Comm = calculateYearCommission(2, netNewQuota, rampProductType, rampMode, noCreditLimit, highMMC);
+            const y3Comm = calculateYearCommission(3, netNewQuota, rampProductType, rampMode, noCreditLimit, highMMC);
+            
+            const y1Total = oteSalary + y1Comm;
+            const y2Total = oteSalary + y2Comm;
+            const y3Total = oteSalary + y3Comm;
+            const threeYearTotal = y1Total + y2Total + y3Total;
+            
+            const salaryK = '$' + Math.round(oteSalary / 1000) + 'k';
+            
+            document.getElementById('oteY1Total').textContent = formatCurrency(y1Total);
+            document.getElementById('oteY1Salary').textContent = salaryK;
+            document.getElementById('oteY1Comm').textContent = formatCurrency(y1Comm);
+            document.getElementById('oteY1Monthly').textContent = '~' + formatCurrency(y1Total / 12) + '/mo';
+            
+            document.getElementById('oteY2Total').textContent = formatCurrency(y2Total);
+            document.getElementById('oteY2Salary').textContent = salaryK;
+            document.getElementById('oteY2Comm').textContent = formatCurrency(y2Comm);
+            document.getElementById('oteY2Monthly').textContent = '~' + formatCurrency(y2Total / 12) + '/mo';
+            
+            document.getElementById('oteY3Total').textContent = formatCurrency(y3Total);
+            document.getElementById('oteY3Salary').textContent = salaryK;
+            document.getElementById('oteY3Comm').textContent = formatCurrency(y3Comm);
+            document.getElementById('oteY3Monthly').textContent = '~' + formatCurrency(y3Total / 12) + '/mo';
+            
+            document.getElementById('ote3YearTotal').textContent = formatCurrency(threeYearTotal);
+        }
+        
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
         document.getElementById('productType').addEventListener('change', updateCalculator);
@@ -1070,9 +1243,17 @@
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
+        document.getElementById('oteSalary').addEventListener('change', updateOTESummary);
+        // Also update OTE when ramp settings change
+        document.getElementById('rampMode').addEventListener('change', updateOTESummary);
+        document.getElementById('rampNetNew').addEventListener('input', updateOTESummary);
+        document.getElementById('rampProduct').addEventListener('change', updateOTESummary);
+        document.getElementById('noCreditLimit').addEventListener('change', updateOTESummary);
+        document.getElementById('highMMC').addEventListener('change', updateOTESummary);
         updateCalculator();
         updateRampTable();
         updateDealCalculator();
+        updateOTESummary();
     </script>
 </body>
 </html>
