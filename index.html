@@ -792,12 +792,32 @@
         function updateCalculator() {
             const baseSalary = parseFloat(document.getElementById('baseSalary').value) || 85000;
             const rates = getSelectedRates();
+            const productType = document.getElementById('productType').value;
+            const noCreditLimit = document.getElementById('noCreditLimit').checked;
+            const highMMC = document.getElementById('highMMC').checked;
+            
+            // Calculate effective Y1 rate with bonuses
+            let bonuses = 0;
+            if (noCreditLimit) bonuses += 0.02;
+            if (highMMC) bonuses += 0.05;
+            const effectiveY1Rate = rates.y1 + bonuses;
             
             // Update rate display
-            document.getElementById('y1RateDisplay').textContent = Math.round(rates.y1 * 100) + '%';
+            let rateText = Math.round(rates.y1 * 100) + '%';
+            if (bonuses > 0) {
+                rateText = Math.round(effectiveY1Rate * 100) + '%';
+            }
+            document.getElementById('y1RateDisplay').textContent = rateText;
             document.getElementById('y2RateDisplay').textContent = Math.round(rates.y2 * 100) + '%';
-            document.getElementById('tableDescription').textContent = 
-                `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
+            
+            let descText = `Based on ${rates.name} products, contracted deals, 67% gross margin.`;
+            if (noCreditLimit || highMMC) {
+                let bonusParts = [];
+                if (noCreditLimit) bonusParts.push('+2% no credit');
+                if (highMMC) bonusParts.push('+5% high MMC');
+                descText += ` (${bonusParts.join(', ')})`;
+            }
+            document.getElementById('tableDescription').textContent = descText;
             
             let tableHTML = '';
             
@@ -805,12 +825,10 @@
                 const monthlyRevenue = MONTHLY_REVENUE_QUOTA * scenario.pct;
                 const monthlyGP = monthlyRevenue * GROSS_MARGIN;
                 
-                // Y1: Use realistic ramp with seasoning
-                // Scale the ramp based on performance level (base $5k net new at 100% quota)
-                const productType = document.getElementById('productType').value;
-                const y1Commission = calculateYearCommission(1, 5000 * scenario.pct, productType, 'realistic', false, false);
+                // Y1: Use realistic ramp with seasoning + bonuses
+                const y1Commission = calculateYearCommission(1, 5000 * scenario.pct, productType, 'realistic', noCreditLimit, highMMC);
                 
-                // Y2/Y3: Steady-state with accelerator
+                // Y2/Y3: Steady-state with accelerator (no bonuses in Y2+)
                 const y2Commission = calculateYear2Commission(monthlyGP, rates.y2);
                 const y3Commission = y2Commission;
                 
@@ -1257,8 +1275,14 @@
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
         document.getElementById('rampProduct').addEventListener('change', updateRampTable);
-        document.getElementById('noCreditLimit').addEventListener('change', updateRampTable);
-        document.getElementById('highMMC').addEventListener('change', updateRampTable);
+        document.getElementById('noCreditLimit').addEventListener('change', function() {
+            updateRampTable();
+            updateCalculator();
+        });
+        document.getElementById('highMMC').addEventListener('change', function() {
+            updateRampTable();
+            updateCalculator();
+        });
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
