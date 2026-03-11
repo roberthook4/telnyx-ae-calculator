@@ -525,43 +525,21 @@
                             <td id="rampTotalComm">$117,181</td>
                             <td>—</td>
                         </tr>
+                        <tr style="background: var(--bg-primary);">
+                            <td colspan="10" style="text-align: right;">Base Salary:</td>
+                            <td id="rampBaseSalary">$85,000</td>
+                            <td>—</td>
+                        </tr>
+                        <tr style="background: var(--telnyx-navy); color: white;">
+                            <td colspan="10" style="text-align: right;">Total Compensation (Base + Commission):</td>
+                            <td id="rampTotalComp" style="color: var(--telnyx-green);">$202,181</td>
+                            <td>—</td>
+                        </tr>
                     </tfoot>
                 </table>
             </div>
             <div class="note" id="rampNote">
                 <strong>Seasoning multipliers</strong> significantly boost Year 1 earnings. The 3x multiplier in months 1-2 means early deals are especially valuable.
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>📊 Monthly Earnings (At Quota)</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
-                Monthly gross compensation at 100% quota achievement. Base salary + commission (pre-tax).
-            </p>
-            <div>
-                <div>
-                    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--telnyx-green-dark);">Year 1</h3>
-                    <table style="font-size: 0.85rem;">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Base</th>
-                                <th>Commission</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="monthlyY1Table">
-                        </tbody>
-                        <tfoot style="background: var(--telnyx-green-light); font-weight: 600;">
-                            <tr>
-                                <td>Year 1</td>
-                                <td id="monthlyY1BaseTot">$0</td>
-                                <td id="monthlyY1CommTot">$0</td>
-                                <td id="monthlyY1Total">$0</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
             </div>
         </div>
 
@@ -1100,6 +1078,11 @@
             document.getElementById('rampTotalBase').textContent = formatCurrency(totalBase);
             document.getElementById('rampTotalAccel').textContent = totalAccel > 0 ? formatCurrency(totalAccel) : '—';
             document.getElementById('rampTotalComm').textContent = formatCurrency(totalComm);
+            
+            // Update Base Salary and Total Comp rows
+            const baseSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
+            document.getElementById('rampBaseSalary').textContent = formatCurrency(baseSalary);
+            document.getElementById('rampTotalComp').textContent = formatCurrency(baseSalary + totalComm);
         }
         
         // Deal Calculator
@@ -1263,61 +1246,14 @@
             document.getElementById('ote3YearTotal').textContent = formatCurrency(threeYearTotal);
         }
         
-        // Monthly Take-Home Calculator (at quota)
-        function updateMonthlyTakeHome() {
-            const annualSalary = parseFloat(document.getElementById('oteSalary').value) || 85000;
-            const monthlySalary = annualSalary / 12;
-            const productType = document.getElementById('oteProduct').value;
-            const noCreditLimit = document.getElementById('noCreditLimit').checked;
-            const highMMC = document.getElementById('highMMC').checked;
-            
-            const rates = RATES[productType];
-            let bonuses = 0;
-            if (noCreditLimit) bonuses += 0.02;
-            if (highMMC) bonuses += 0.05;
-            const y1Rate = rates.y1 + bonuses;
-            const y2Rate = rates.y2;
-            
-            // At quota: $5k net new per month, building to $60k book
-            const netNewQuota = 5000;
-            const fullyRampedGP = 60000 * GROSS_MARGIN; // $40,200
-            
-            let y1Html = '';
-            let y1TotalComm = 0;
-            
-            // Year 1: ramp with seasoning
-            for (let m = 1; m <= 12; m++) {
-                const book = netNewQuota * m;
-                const gp = book * GROSS_MARGIN;
-                let comm = gp * y1Rate;
-                
-                // Apply seasoning
-                const multiplier = SEASONING[m] || 1.0;
-                if (multiplier > 1) {
-                    const uplift = (comm * multiplier) - comm;
-                    comm = comm + Math.min(uplift, SEASONING_CAP);
-                }
-                
-                y1TotalComm += comm;
-                const monthTotal = monthlySalary + comm;
-                
-                y1Html += '<tr><td>M' + m + '</td><td>' + formatCurrency(monthlySalary) + '</td><td>' + formatCurrency(comm) + '</td><td>' + formatCurrency(monthTotal) + '</td></tr>';
-            }
-            
-            document.getElementById('monthlyY1Table').innerHTML = y1Html;
-            document.getElementById('monthlyY1BaseTot').textContent = formatCurrency(annualSalary);
-            document.getElementById('monthlyY1CommTot').textContent = formatCurrency(y1TotalComm);
-            document.getElementById('monthlyY1Total').textContent = formatCurrency(annualSalary + y1TotalComm);
-        }
-        
         // Initialize
         document.getElementById('oteSalary').addEventListener('change', function() {
             updateCalculator();
-            updateMonthlyTakeHome();
+            updateRampTable();
         });
         document.getElementById('oteProduct').addEventListener('change', function() {
             updateCalculator();
-            updateMonthlyTakeHome();
+            updateRampTable();
         });
         document.getElementById('rampYear').addEventListener('change', updateRampTable);
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
@@ -1332,7 +1268,7 @@
             updateRampTable();
             updateCalculator();
             updateOTESummary();
-            updateMonthlyTakeHome();
+            
         }
         document.getElementById('noCreditLimit').addEventListener('change', function() { syncNoCreditLimit(this); });
         document.getElementById('oteNoCreditLimit').addEventListener('change', function() { syncNoCreditLimit(this); });
@@ -1347,7 +1283,7 @@
             updateRampTable();
             updateCalculator();
             updateOTESummary();
-            updateMonthlyTakeHome();
+            
         }
         document.getElementById('highMMC').addEventListener('change', function() { syncHighMMC(this); });
         document.getElementById('oteHighMMC').addEventListener('change', function() { syncHighMMC(this); });
@@ -1373,7 +1309,7 @@
         updateRampTable();
         updateDealCalculator();
         updateOTESummary();
-        updateMonthlyTakeHome();
+        
     </script>
 </body>
 </html>
