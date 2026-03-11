@@ -463,6 +463,18 @@
                     </div>
                 </div>
             </div>
+            <div class="input-row" style="margin-bottom: 16px;">
+                <div class="input-group" style="flex-direction: row; gap: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="noCreditLimit" checked style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>No Credit Limit (+2%)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="highMMC" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>High MMC >$7.5k (+5%)</span>
+                    </label>
+                </div>
+            </div>
             <div id="rampRateInfo" style="margin-bottom: 16px; padding: 12px 16px; background: var(--telnyx-green-light); border-radius: 8px; font-size: 0.9rem;">
                 <strong>Year 1 Rate:</strong> <span id="rampRateDisplay">32%</span> (30% base + 2% contract bonus) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)
             </div>
@@ -764,13 +776,23 @@
             const rates = RATES[rampProductType];
             
             const isYear1 = rampYear === '1';
-            const effectiveRate = isYear1 ? (rates.y1 + CONTRACT_BONUS) : rates.y2;
+            const noCreditLimit = document.getElementById('noCreditLimit').checked;
+            const highMMC = document.getElementById('highMMC').checked;
+            
+            let bonuses = 0;
+            if (noCreditLimit) bonuses += 0.02;
+            if (highMMC) bonuses += 0.05;
+            
+            const effectiveRate = isYear1 ? (rates.y1 + bonuses) : rates.y2;
             
             // Update rate info display
             const ratePercent = Math.round(effectiveRate * 100);
             const rateInfo = document.getElementById('rampRateInfo');
             if (isYear1) {
-                rateInfo.innerHTML = `<strong>Year 1 Rate:</strong> ${ratePercent}% (${Math.round(rates.y1 * 100)}% base + 2% contract bonus) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)`;
+                let bonusText = Math.round(rates.y1 * 100) + '% base';
+                if (noCreditLimit) bonusText += ' + 2% no credit limit';
+                if (highMMC) bonusText += ' + 5% high MMC';
+                rateInfo.innerHTML = `<strong>Year 1 Rate:</strong> ${ratePercent}% (${bonusText}) &nbsp;|&nbsp; <strong>Seasoning:</strong> Active (up to 3x)`;
                 rateInfo.style.background = 'var(--telnyx-green-light)';
             } else {
                 rateInfo.innerHTML = `<strong>Year 2 Rate:</strong> ${ratePercent}% (reduced rate) &nbsp;|&nbsp; <strong>Seasoning:</strong> None`;
@@ -904,6 +926,8 @@
         document.getElementById('rampMode').addEventListener('change', updateRampTable);
         document.getElementById('rampNetNew').addEventListener('input', updateRampTable);
         document.getElementById('rampProduct').addEventListener('change', updateRampTable);
+        document.getElementById('noCreditLimit').addEventListener('change', updateRampTable);
+        document.getElementById('highMMC').addEventListener('change', updateRampTable);
         document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
         document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
         document.getElementById('dealType').addEventListener('change', updateDealCalculator);
