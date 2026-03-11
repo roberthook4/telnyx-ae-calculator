@@ -370,6 +370,57 @@
             </div>
         </div>
 
+        <div class="card" style="background: linear-gradient(135deg, #FAFBFC 0%, var(--telnyx-green-light) 100%); border: 2px solid var(--telnyx-green);">
+            <h2 style="color: var(--telnyx-green-dark); border-bottom-color: var(--telnyx-green);">💵 Example Deal Calculator</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                See exactly what you'd earn on a specific deal.
+            </p>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="dealMRR">Deal Size (Monthly Revenue)</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">$</span>
+                        <input type="number" id="dealMRR" value="5000" min="0" max="100000" step="500">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="dealProduct">Product Type</label>
+                    <select id="dealProduct">
+                        <option value="voice">Voice / AI / IOT / SIP</option>
+                        <option value="support">Support / Numbers / MMC</option>
+                        <option value="sms">SMS Messaging</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="dealType">Deal Type</label>
+                    <select id="dealType">
+                        <option value="new">New Business (24-mo payout)</option>
+                        <option value="upsell">Upsell (12-mo payout)</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Year 1 Commission</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--telnyx-navy);" id="dealY1">$0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" id="dealY1Detail">$0/mo × 12</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Year 2 Commission</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--telnyx-navy);" id="dealY2">$0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" id="dealY2Detail">$0/mo × 12</div>
+                </div>
+                <div style="background: var(--telnyx-navy); padding: 20px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 4px;">Total Payout</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--telnyx-green);" id="dealTotal">$0</div>
+                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);" id="dealTotalDetail">Over 24 months</div>
+                </div>
+            </div>
+            <div style="margin-top: 16px; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+                <strong>Example:</strong> A <span id="dealExample">$60k ARR Voice AI deal</span> would pay <strong id="dealExamplePayout">$X</strong> in Year 1 commission alone.
+            </div>
+        </div>
+
         <div class="card">
             <h2>💰 Compensation by Performance Level</h2>
             <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;" id="tableDescription">
@@ -619,10 +670,55 @@
             document.getElementById('scenarioTable').innerHTML = tableHTML;
         }
         
+        // Deal Calculator
+        function updateDealCalculator() {
+            const mrr = parseFloat(document.getElementById('dealMRR').value) || 0;
+            const productType = document.getElementById('dealProduct').value;
+            const dealType = document.getElementById('dealType').value;
+            const isNewBusiness = dealType === 'new';
+            
+            const rates = RATES[productType];
+            const monthlyGP = mrr * GROSS_MARGIN;
+            
+            // Calculate monthly commission (at base rate, no seasoning for simplicity)
+            const y1MonthlyComm = monthlyGP * (rates.y1 + CONTRACT_BONUS);
+            const y2MonthlyComm = monthlyGP * rates.y2;
+            
+            const y1Total = y1MonthlyComm * 12;
+            const y2Total = isNewBusiness ? (y2MonthlyComm * 12) : 0;
+            const totalPayout = y1Total + y2Total;
+            const months = isNewBusiness ? 24 : 12;
+            
+            // Update display
+            document.getElementById('dealY1').textContent = formatCurrency(y1Total);
+            document.getElementById('dealY1Detail').textContent = formatCurrency(y1MonthlyComm) + '/mo × 12';
+            
+            if (isNewBusiness) {
+                document.getElementById('dealY2').textContent = formatCurrency(y2Total);
+                document.getElementById('dealY2Detail').textContent = formatCurrency(y2MonthlyComm) + '/mo × 12';
+            } else {
+                document.getElementById('dealY2').textContent = '$0';
+                document.getElementById('dealY2Detail').textContent = 'Upsell: 12-mo only';
+            }
+            
+            document.getElementById('dealTotal').textContent = formatCurrency(totalPayout);
+            document.getElementById('dealTotalDetail').textContent = 'Over ' + months + ' months';
+            
+            // Update example text
+            const arr = mrr * 12;
+            const productName = rates.name;
+            document.getElementById('dealExample').textContent = formatCurrency(arr) + ' ARR ' + productName + ' deal';
+            document.getElementById('dealExamplePayout').textContent = formatCurrency(y1Total);
+        }
+        
         // Initialize
         document.getElementById('baseSalary').addEventListener('input', updateCalculator);
         document.getElementById('productType').addEventListener('change', updateCalculator);
+        document.getElementById('dealMRR').addEventListener('input', updateDealCalculator);
+        document.getElementById('dealProduct').addEventListener('change', updateDealCalculator);
+        document.getElementById('dealType').addEventListener('change', updateDealCalculator);
         updateCalculator();
+        updateDealCalculator();
     </script>
 </body>
 </html>
